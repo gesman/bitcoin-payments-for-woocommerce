@@ -265,7 +265,8 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			$order_total_in_btc   = sprintf ("%.8f", $order_total_in_btc);
 
 			$bitcoin_addr_merchant = $this->bitcoin_addr_merchant;
-			$callback_url = trailingslashit (home_url()) . "?wc-api=BWWC_Bitcoin&bitcoinway=1&src=bcinfo&order_id={$order_id}"; // http://www.example.com/?bitcoinway=1&order_id=74&src=bcinfo
+			$secret_key = substr(md5(microtime()), 0, 16);	# Generate secret key to be validate upon receiving IPN callback to prevent spoofing.
+			$callback_url = trailingslashit (home_url()) . "?wc-api=BWWC_Bitcoin&secret_key={$secret_key}&bitcoinway=1&src=bcinfo&order_id={$order_id}"; // http://www.example.com/?bitcoinway=1&order_id=74&src=bcinfo
    		BWWC__log_event (__FILE__, __LINE__, "Calling BWWC__generate_temporary_bitcoin_address(). Payments to be forwarded to: '{$bitcoin_addr_merchant}' with callback URL: '{$callback_url}' ...");
 
    			// This function generates temporary bitcoin address and schedules IPN callback at the same
@@ -282,6 +283,11 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
    		
    		BWWC__log_event (__FILE__, __LINE__, "     Generated unique bitcoin address: '{$bitcoins_address}' for order_id " . $order_id);
 
+     	update_post_meta (
+     		$order_id, 			// post id ($order_id)
+     		'secret_key', 	// meta key
+     		$secret_key 		// meta value. If array - will be auto-serialized
+     		);
      	update_post_meta (
      		$order_id, 			// post id ($order_id)
      		'order_total_in_btc', 	// meta key
@@ -437,23 +443,17 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				// Processing IPN callback from blockchain.info ('bcinfo')
 
 
-				$ips = gethostbynamel('blockchain.info');
-				$must_be_prefix    = preg_replace ('|\d+\.\d+$|', "", $ips[0]);
-				$originated_prefix = preg_replace ('|\d+\.\d+$|', "", @$_SERVER['REMOTE_ADDR']);
+				$order_id = @$_GET['order_id'];
 
-				//Check the Request ip matches that from blockchain.info
-				if ($must_be_prefix != $originated_prefix)
+				$secret_key = get_post_meta($order_id, 'secret_key', true);
+				$secret_key_sent = @$_GET['secret_key'];
+				// Check the Request secret_key matches the original one (blockchain.info sends all params back)
+				if ($secret_key_sent != $secret_key)
 				{
-	      			BWWC__log_event (__FILE__, __LINE__, "Warning: wrong originating IP address: " . $_SERVER['REMOTE_ADDR'] . ". Expected prefix: " . $must_be_prefix . ". Fraud? IPN request ignored...");
-	      			
-	      			//////!!!
-	      			BWWC__log_event (__FILE__, __LINE__, "Temporary proceeding with processing.");
-	      			/// More security validation will be added soon
-	      			//////!!!
-	      			///!!!exit ('Bad IP');
+     			BWWC__log_event (__FILE__, __LINE__, "Warning: secret_key does not match! secret_key sent: '{$secret_key_sent}'. Expected: '{$secret_key}'. Processing aborted.");
+     			exit ('Invalid secret_key');
 				}
 
-				$order_id = @$_GET['order_id'];
 				$confirmations = @$_GET['confirmations'];
 
 

@@ -46,6 +46,9 @@ soon
 
 == Changelog ==
 
+= 1.25 =
+* Implemented security check (secret_key validation logic) to prevent spoofed IPN requests.
+
 = 1.24 =
 * Fixed IPN callback notification invocation specific to WC 2.x
 

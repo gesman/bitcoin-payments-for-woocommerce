@@ -6,7 +6,7 @@ http://www.bitcoinway.com/
 
 //---------------------------------------------------------------------------
 // Global definitions
-define('BWWC_VERSION',           '1.24');
+define('BWWC_VERSION',           '1.25');
 
 //-----------------------------------------------
 define('BWWC_EDITION',           'Standard');    
