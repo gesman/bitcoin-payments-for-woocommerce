@@ -445,7 +445,12 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				if ($must_be_prefix != $originated_prefix)
 				{
 	      			BWWC__log_event (__FILE__, __LINE__, "Warning: wrong originating IP address: " . $_SERVER['REMOTE_ADDR'] . ". Expected prefix: " . $must_be_prefix . ". Fraud? IPN request ignored...");
-	      			exit ('Bad IP');
+	      			
+	      			//////!!!
+	      			BWWC__log_event (__FILE__, __LINE__, "Temporary proceeding with processing.");
+	      			/// More security validation will be added soon
+	      			//////!!!
+	      			///!!!exit ('Bad IP');
 				}
 
 				$order_id = @$_GET['order_id'];
