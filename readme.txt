@@ -13,7 +13,7 @@ Bitcoin Payments for WooCommerce is a Wordpress plugin that allows to accept bit
 
 == Description ==
 
-You online store must use WooCommerce platform (free wordpress plugin). 
+Your online store must use WooCommerce platform (free wordpress plugin). 
 Once you installed and activated WooCommerce, you may install and activate Bitcoin Payments for WooCommerce.
 
 = Benefits =

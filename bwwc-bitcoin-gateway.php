@@ -521,9 +521,9 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				else
 				{
 					// Number of confirmations are not there yet... Skip it this time ...
-				    // Don't print *ok* so the notification resent again on next confirmation
-      				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment notification received (for BTC {$value_in_btc}), but number of confirmations is not enough yet. Confirmations received/required: {$confirmations}/{$this->confirmations}");
-				    exit();
+			    // Don't print *ok* so the notification resent again on next confirmation
+   				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment notification received (for BTC {$value_in_btc}), but number of confirmations is not enough yet. Confirmations received/required: {$confirmations}/{$this->confirmations}");
+			    exit();
 				}
 			}
 		}
