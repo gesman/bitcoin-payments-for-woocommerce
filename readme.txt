@@ -46,6 +46,9 @@ soon
 
 == Changelog ==
 
+= 1.26 =
+* Fixed PHP warnings for repeated 'define's within bwwc-include-all.php
+
 = 1.25 =
 * Implemented security check (secret_key validation logic) to prevent spoofed IPN requests.
 
