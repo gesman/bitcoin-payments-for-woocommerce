@@ -8,7 +8,7 @@ http://www.bitcoinway.com/
 // Global definitions
 if (!defined('BWWC_PLUGIN_NAME'))
   {
-  define('BWWC_VERSION',           '1.26');
+  define('BWWC_VERSION',           '1.27');
 
   //-----------------------------------------------
   define('BWWC_EDITION',           'Standard');    

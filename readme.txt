@@ -46,6 +46,9 @@ soon
 
 == Changelog ==
 
+= 1.27 =
+* Fixed: very slow loading due to MtGox exchange rate API issues.
+
 = 1.26 =
 * Fixed PHP warnings for repeated 'define's within bwwc-include-all.php
 

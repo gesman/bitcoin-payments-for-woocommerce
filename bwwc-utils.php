@@ -113,36 +113,35 @@ function BWWC__get_exchange_rate_per_bitcoin ($currency_code, $rate_type = 'vwap
 
    $avg = $vwap = $sell = 0;
 
-   $main_url   = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
-   $backup_url = "http://blockchain.info/ticker";
+   $mtgox_url   = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
+   $blockchain_url = "http://blockchain.info/ticker";
 
-   $result = @BWWC__file_get_contents ($main_url);
+   # Getting rate from blockchain.info first as MtGox response is very slow from some locations.
+   $result = @BWWC__file_get_contents ($blockchain_url);
    if ($result)
    {
       $json_obj = @json_decode(trim($result));
       if (is_object($json_obj))
       {
-         if ($json_obj->result == 'success')
-         {
-            $avg  = @$json_obj->return->avg->value;
-            $vwap = @$json_obj->return->vwap->value;
-            $sell = @$json_obj->return->sell->value;
-         }
+         $key  = "15m";
+         $avg  = $vwap = $sell = @$json_obj->$currency_code->$key;
       }
    }
 
    if (!$avg || !$vwap || !$sell)
    {
-      BWWC__log_event (__FILE__, __LINE__, "WARNING: Cannot retrieve bitcoin exchange rates from {$main_url}. SSL/server issues? Will try backup URL ...");
-      // Fallback to backup URL
-      $result = @BWWC__file_get_contents ($backup_url);
+      $result = @BWWC__file_get_contents ($mtgox_url);
       if ($result)
       {
          $json_obj = @json_decode(trim($result));
          if (is_object($json_obj))
          {
-            $key  = "15m";
-            $avg  = $vwap = $sell = @$json_obj->$currency_code->$key;
+            if ($json_obj->result == 'success')
+            {
+               $avg  = @$json_obj->return->avg->value;
+               $vwap = @$json_obj->return->vwap->value;
+               $sell = @$json_obj->return->sell->value;
+            }
          }
       }
    }
