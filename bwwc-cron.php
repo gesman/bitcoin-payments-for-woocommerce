@@ -131,6 +131,9 @@ function BWWC_cron_job_worker ($hardcron=false)
           }
         }
 
+        // Note: to be perfectly safe against late-paid orders, we need to:
+        //	Scan '$address_meta['orders']' for first UNPAID order that is exactly matching amount at address.
+
 		    if ($balance_info_array['balance'] >= $last_order_info['order_total'])
 		    {
 		      // Process full payment event
