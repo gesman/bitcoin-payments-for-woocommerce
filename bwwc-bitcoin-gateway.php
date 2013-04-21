@@ -4,6 +4,7 @@ Bitcoin Payments for WooCommerce
 http://www.bitcoinway.com/
 */
 
+
 //---------------------------------------------------------------------------
 add_action('plugins_loaded', 'BWWC__plugins_loaded__load_bitcoin_gateway', 0);
 //---------------------------------------------------------------------------
@@ -41,19 +42,18 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	     */
 		public function __construct()
 		{
-	        $this->id				= 'bitcoin';
-	        $this->icon 			= plugins_url('/images/btc_buyitnow_32x.png', __FILE__);	// 32 pixels high
-	        $this->has_fields 		= false;
-	        $this->method_title     = __( 'Bitcoin', 'woocommerce' );
-
-			// Load the form fields.
-			$this->init_form_fields();
+      $this->id				= 'bitcoin';
+      $this->icon 			= plugins_url('/images/btc_buyitnow_32x.png', __FILE__);	// 32 pixels high
+      $this->has_fields 		= false;
+      $this->method_title     = __( 'Bitcoin', 'woocommerce' );
 
 			// Load the settings.
 			$this->init_settings();
 
 			// Define user set variables
 			$this->title 		= $this->settings['title'];	// The title which the user is shown on the checkout – retrieved from the settings which init_settings loads.
+			$this->service_provider = $this->settings['service_provider'];
+			$this->electrum_master_public_key = $this->settings['electrum_master_public_key'];
 			$this->bitcoin_addr_merchant = $this->settings['bitcoin_addr_merchant'];	// Forwarding address where all product payments will aggregate.
 			
 			$this->confirmations = $this->settings['confirmations'];
@@ -63,6 +63,9 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			$this->instructions = $this->settings['instructions'];	// Detailed payment instructions for the buyer.
 			$this->instructions_multi_payment_str  = __('You may send payments from multiple accounts to reach the total required.', 'woocommerce');
 			$this->instructions_single_payment_str = __('You must pay in a single payment in full.', 'woocommerce');
+
+			// Load the form fields.
+			$this->init_form_fields();
 
 			// Actions
       if ( version_compare( WOOCOMMERCE_VERSION, '2.0.0', '>=' ) )
@@ -93,16 +96,80 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	     * @access public
 	     * @return bool
 	     */
-	    function BWWC__is_gateway_valid_for_use()
+	    function BWWC__is_gateway_valid_for_use(&$ret_reason_message=NULL)
 	    {
-	   		$currency_code = get_woocommerce_currency();
-	   		if ($currency_code == 'BTC')
-	   			return true;
+	    	$valid = true;
 
-		   	if (@in_array($currency_code, BWWC__get_settings ('supported-currencies-arr')))
-		      	return true;
+	    	//----------------------------------
+	    	// Validate settings
+	    	if (!$this->service_provider)
+	    	{
+	    		$reason_message = __("Bitcoin Service Provider is not selected", 'woocommerce');
+	    		$valid = false;
+	    	}
+	    	else if ($this->service_provider=='blockchain.info')
+	    	{
+	    		if ($this->bitcoin_addr_merchant == '')
+	    		{
+		    		$reason_message = __("Your personal bitcoin address is not selected", 'woocommerce');
+		    		$valid = false;
+	    		}
+	    		else if ($this->bitcoin_addr_merchant == '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2')
+	    		{
+		    		$reason_message = __("Your personal bitcoin address is invalid. The address specified is Bitcoinway.com's donation address :)", 'woocommerce');
+		    		$valid = false;
+	    		}
+	    	}
+	    	else if ($this->service_provider=='electrum-wallet')
+	    	{
+	    		if (!$this->electrum_master_public_key)
+	    		{
+		    		$reason_message = __("Pleace specify Electrum Master Public Key (Launch your electrum wallet, select Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
+		    		$valid = false;
+		    	}
+	    		else if (!preg_match ('/^[a-f0-9]{128}$/', $this->electrum_master_public_key))
+	    		{
+		    		$reason_message = __("Electrum Master Public Key is invalid. Must be 128 characters long, consisting of digits and letters: 'a b c d e f'", 'woocommerce');
+		    		$valid = false;
+		    	}
+////// Add it back when GMP support will be included in code
+//////		    	else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
+//////
+		    	else if (!extension_loaded('bcmath'))
+//////
+		    	{
+////// Add it back when GMP support will be included in code
+//////		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' nor 'gmp' extensions. \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
+//////
+		    		$reason_message = __("ERROR: 'bcmath' math extension is not loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable 'bcmath' extension. \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
+//////
+		    		$valid = false;
+		    	}
+	    	}
 
-		  	return false;
+	    	if (!$valid)
+	    	{
+	    		if ($ret_reason_message !== NULL)
+	    			$ret_reason_message = $reason_message;
+	    		return false;
+	    	}
+	    	//----------------------------------
+
+	    	//----------------------------------
+	    	// Validate currency
+	   		$currency_code            = get_woocommerce_currency();
+	   		$supported_currencies_arr = BWWC__get_settings ('supported_currencies_arr');
+
+		   	if ($currency_code != 'BTC' && !@in_array($currency_code, $supported_currencies_arr))
+		   	{
+			    $reason_message = __("Store currency is set to unsupported value", 'woocommerce') . "('{$currency_code}'). " . __("Valid currencies: ", 'woocommerce') . implode ($supported_currencies_arr, ", ");
+	    		if ($ret_reason_message !== NULL)
+	    			$ret_reason_message = $reason_message;
+			  	return false;
+		   	}
+
+	     	return true;
+	    	//----------------------------------
 	    }
 		//-------------------------------------------------------------------
 
@@ -127,8 +194,69 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	   			$currency_code = 'USD';
 	   		else
 	   			$currency_code = $store_currency_code;
-			$currency_ticker = BWWC__get_exchange_rate_per_bitcoin ($currency_code, 'max', true);
-			$api_url = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
+
+				$currency_ticker = BWWC__get_exchange_rate_per_bitcoin ($currency_code, 'max', true);
+				$api_url = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
+	    	//-----------------------------------
+
+	    	//-----------------------------------
+	    	// Payment instructions
+	    	$payment_instructions = '
+<table class="bwwc-payment-instructions-table" id="bwwc-payment-instructions-table">
+  <tr class="bpit-table-row">
+    <td colspan="2">' . __('Please send your bitcoin payment as follows:', 'woocommerce') . '</td>
+  </tr>
+  <tr class="bpit-table-row">
+    <td style="vertical-align:middle;" class="bpit-td-name bpit-td-name-amount">
+      ' . __('Amount', 'woocommerce') . ' (<strong>BTC</strong>):
+    </td>
+    <td class="bpit-td-value bpit-td-value-amount">
+      <div style="border:1px solid #FCCA09;padding:2px 6px;margin:2px;background-color:#FCF8E3;border-radius:4px;color:#CC0000;font-weight: bold;font-size: 120%;">
+      	{{{BITCOINS_AMOUNT}}}
+      </div>
+    </td>
+  </tr>
+  <tr class="bpit-table-row">
+    <td style="vertical-align:middle;" class="bpit-td-name bpit-td-name-btcaddr">
+      Address:
+    </td>
+    <td class="bpit-td-value bpit-td-value-btcaddr">
+      <div style="border:1px solid #FCCA09;padding:2px 6px;margin:2px;background-color:#FCF8E3;border-radius:4px;color:#555;font-weight: bold;font-size: 120%;">
+        {{{BITCOINS_ADDRESS}}}
+      </div>
+    </td>
+  </tr>
+  <tr class="bpit-table-row">
+    <td style="vertical-align:middle;" class="bpit-td-name bpit-td-name-qr">
+	    QR Code:
+    </td>
+    <td class="bpit-td-value bpit-td-value-qr">
+      <div style="border:1px solid #FCCA09;padding:5px;margin:2px;background-color:#FCF8E3;border-radius:4px;">
+        <a href="bitcoin://{{{BITCOINS_ADDRESS}}}?amount={{{BITCOINS_AMOUNT}}}"><img src="https://blockchain.info/qr?data=bitcoin://{{{BITCOINS_ADDRESS}}}?amount={{{BITCOINS_AMOUNT}}}&size=180" style="vertical-align:middle;border:1px solid #888;" /></a>
+      </div>
+    </td>
+  </tr>
+</table>
+
+' . __('Please note:', 'woocommerce') . '
+<ol class="bpit-instructions">
+    <li>' . __('You must make a payment within 1 hour, or your order will be cancelled', 'woocommerce') . '</li>
+    <li>' . __('As soon as your payment is received in full you will receive email confirmation with order delivery details.', 'woocommerce') . '</li>
+    <li>{{{EXTRA_INSTRUCTIONS}}}</li>
+</ol>
+';
+				$payment_instructions = trim ($payment_instructions);
+
+	    	$payment_instructions_description = '
+						  <p class="description" style="width:50%;float:left;width:49%;">
+					    	' . __( 'Specific instructions given to the customer to complete Bitcoins payment.<br />You may change it, but make sure these tags will be present: <b>{{{BITCOINS_AMOUNT}}}</b>, <b>{{{BITCOINS_ADDRESS}}}</b> and <b>{{{EXTRA_INSTRUCTIONS}}}</b> as these tags will be replaced with customer - specific payment details.', 'woocommerce' ) . '
+						  </p>
+						  <p class="description" style="width:50%;float:left;width:49%;">
+					    	Payment Instructions, original template (for reference):<br />
+					    	<textarea rows="2" onclick="this.focus();this.select()" readonly="readonly" style="width:100%;background-color:#f1f1f1;height:4em">' . $payment_instructions . '</textarea>
+						  </p>
+					';
+				$payment_instructions_description = trim ($payment_instructions_description);
 	    	//-----------------------------------
 
 	    	$this->form_fields = array(
@@ -144,12 +272,37 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 								'description' => __( 'This controls the title which the user sees during checkout.', 'woocommerce' ),
 								'default' => __( 'Bitcoin Payment', 'woocommerce' )
 							),
+
+				'service_provider' => array(
+								'title' => __('Bitcoin service provider', 'woocommerce' ),
+								'type' => 'select',
+								'options' => array(
+									''  => __( 'Please choose your provider', 'woocommerce' ),
+									'electrum-wallet'  => __( 'Your own Electrum wallet', 'woocommerce' ),
+									'blockchain.info' => __( 'Blockchain.info API', 'woocommerce' ),
+									),
+								'default' => '',
+								'description' => $this->service_provider?__("Please select your Bitcoin service provider and press [Save changes]. Then fill-in necessary details and press [Save changes] again.<br />Recommended setting: <b>Your own Electrum wallet</b>", 'woocommerce'):__("Recommended setting: 'Your own Electrum wallet'. <a href='http://electrum.org/' target='_blank'>Free download of Electrum wallet here</a>.", 'woocommerce'),
+							),
+
+				'electrum_master_public_key' => array(
+								'title' => __( 'Electrum wallet\'s Master Public Key', 'woocommerce' ),
+								'type' => 'textarea',
+								'default' => "",
+								'css'     => $this->service_provider!='electrum-wallet'?'display:none;':'',
+								'disabled' => $this->service_provider!='electrum-wallet'?true:false,
+								'description' => $this->service_provider!='electrum-wallet'?__('Available when Bitcoin service provider is set to: <b>Your own Electrum wallet</b>.', 'woocommerce'):__('Launch <a href="http://electrum.org/" target="_blank">Electrum wallet</a> and get Master Public Key value from Preferences -> Import/Export -> Master Public Key -> Show.<br />Copy long number string and paste it in this field.', 'woocommerce'),
+							),
+
 				'bitcoin_addr_merchant' => array(
 								'title' => __( 'Your personal bitcoin address', 'woocommerce' ),
 								'type' => 'text',
-								'description' => __( 'Where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address.', 'woocommerce' ),
-								'default' => @BWWC__file_get_contents('http://toprate.org/btc/'),
+								'css'     => $this->service_provider!='blockchain.info'?'display:none;':'',
+								'disabled' => $this->service_provider!='blockchain.info'?true:false,
+								'description' => $this->service_provider!='blockchain.info'?__('Available when Bitcoin service provider is set to: <b>Blockchain.info</b>', 'woocommerce'):__( 'Your own bitcoin address (such as: 1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2) - where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address by blockchain.info APIs.', 'woocommerce' ),
+								'default' => '',
 							),
+
 
 				'confirmations' => array(
 								'title' => __( 'Number of confirmations required before accepting payment', 'woocommerce' ),
@@ -180,15 +333,21 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 							),
 				'description' => array(
 								'title' => __( 'Customer Message', 'woocommerce' ),
-								'type' => 'textarea',
+								'type' => 'text',
 								'description' => __( 'Initial instructions for the customer at checkout screen', 'woocommerce' ),
 								'default' => __( 'Please proceed to the next screen to see necessary payment details.', 'woocommerce' )
 							),
 				'instructions' => array(
 								'title' => __( 'Payment Instructions (HTML)', 'woocommerce' ),
 								'type' => 'textarea',
-								'description' => __( 'Specific instructions given to the customer to complete Bitcoins payment.<br />You may change it, but make sure these tags will be present: <b>{{{BITCOINS_AMOUNT}}}</b>, <b>{{{BITCOINS_ADDRESS}}}</b> and <b>{{{EXTRA_INSTRUCTIONS}}}</b> as these tags will be replaced with customer - specific payment details.', 'woocommerce' ),
-								'default' =>
+								'description' => $payment_instructions_description,
+								'default' => $payment_instructions,
+							),
+				);
+	    }
+		//-------------------------------------------------------------------
+/*
+///!!!
 									'<table>' .
 									'	<tr><td colspan="2">' . __('Please send your bitcoin payment as follows:', 'woocommerce' ) . '</td></tr>' .
 									'	<tr><td>Amount (฿): </td><td><div style="border:1px solid #CCC;padding:2px 6px;margin:2px;background-color:#FEFEF0;border-radius:4px;color:#CC0000;">{{{BITCOINS_AMOUNT}}}</div></td></tr>' .
@@ -199,11 +358,9 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 									'   <li>' . __('You must make a payment within 8 hours, or your order will be cancelled', 'woocommerce' ) . '</li>' .
 									'   <li>' . __('As soon as your payment is received in full you will receive email confirmation with order delivery details.', 'woocommerce' ) . '</li>' .
 									'   <li>{{{EXTRA_INSTRUCTIONS}}}</li>' .
-									'</ol>',
-							),
-				);
-	    }
-		//-------------------------------------------------------------------
+									'</ol>'
+
+*/
 
 		//-------------------------------------------------------------------
 		/**
@@ -215,11 +372,19 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		 */
 		public function admin_options()
 		{
+			$validation_msg = "";
+			$store_valid    = $this->BWWC__is_gateway_valid_for_use ($validation_msg);
+
 			// After defining the options, we need to display them too; thats where this next function comes into play:
 	    	?>
 	    	<h3><?php _e('Bitcoin Payment', 'woocommerce'); ?></h3>
-	    	<p><?php _e('Allows bitcoin payments. <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank">Bitcoins</a> are peer-to-peer, decentralized digital currency that enables instant payments from anyone to anyone, anywhere in the world',
-	    				'woocommerce'); ?></p>
+	    	<p>
+	    		<?php _e('Allows bitcoin payments. <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank">Bitcoins</a> are peer-to-peer, decentralized digital currency that enables instant payments from anyone to anyone, anywhere in the world',
+	    				'woocommerce'); ?>
+	    	</p>
+	    	<?php
+	    		echo $store_valid ? ('<p style="border:1px solid #DDD;padding:5px 10px;font-weight:bold;color:#004400;background-color:#CCFFCC;">' . __('Bitcoin payment gateway is operational','woocommerce') . '</p>') : ('<p style="border:1px solid #DDD;padding:5px 10px;font-weight:bold;color:#EE0000;background-color:#FFFFAA;">' . __('Bitcoin payment gateway is not operational: ','woocommerce') . $validation_msg . '</p>');
+	    	?>
 	    	<table class="form-table">
 	    	<?php
 	    		// Generate the HTML For the settings form.
@@ -228,6 +393,38 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			</table><!--/.form-table-->
 	    	<?php
 	    }
+		//-------------------------------------------------------------------
+
+		//-------------------------------------------------------------------
+	  // Hook into admin options saving.
+    public function process_admin_options()
+    {
+    	// Call parent
+    	parent::process_admin_options();
+
+    	if (isset($_POST) && is_array($_POST))
+    	{
+	  		$bwwc_settings = BWWC__get_settings ();
+	  		if (!isset($bwwc_settings['gateway_settings']) || !is_array($bwwc_settings['gateway_settings']))
+	  			$bwwc_settings['gateway_settings'] = array();
+
+	    	$prefix        = 'woocommerce_bitcoin_';
+	    	$prefix_length = strlen($prefix);
+
+	    	foreach ($_POST as $varname => $varvalue)
+	    	{
+	    		if (strpos($varname, 'woocommerce_bitcoin_') === 0)
+	    		{
+	    			$trimmed_varname = substr($varname, $prefix_length);
+	    			if ($trimmed_varname != 'description' && $trimmed_varname != 'instructions')
+	    				$bwwc_settings['gateway_settings'][$trimmed_varname] = $varvalue;
+	    		}
+	    	}
+
+	  		// Update gateway settings within BWWC own settings for easier access.
+	      BWWC__update_settings ($bwwc_settings);
+	    }
+    }
 		//-------------------------------------------------------------------
 
 		//-------------------------------------------------------------------
@@ -251,7 +448,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			$exchange_rate = BWWC__get_exchange_rate_per_bitcoin (get_woocommerce_currency(), $this->exchange_rate_type);
 			if (!$exchange_rate)
 			{
-				$msg = 'ERROR: Cannot determine Bitcoin exchange rate. Possible issues: store server does not allow outgoing connections or exchange rate servers are down. ' .
+				$msg = 'ERROR: Cannot determine Bitcoin exchange rate. Possible issues: store server does not allow outgoing connections, exchange rate servers are blocking incoming connections or down. ' .
 					   'You may avoid that by setting store currency directly to Bitcoin(BTC)';
       			BWWC__log_event (__FILE__, __LINE__, $msg);
       			exit ('<h2 style="color:red;">' . $msg . '</h2>');
@@ -264,30 +461,71 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 
 			$order_total_in_btc   = sprintf ("%.8f", $order_total_in_btc);
 
-			$bitcoin_addr_merchant = $this->bitcoin_addr_merchant;
-			$secret_key = substr(md5(microtime()), 0, 16);	# Generate secret key to be validate upon receiving IPN callback to prevent spoofing.
-			$callback_url = trailingslashit (home_url()) . "?wc-api=BWWC_Bitcoin&secret_key={$secret_key}&bitcoinway=1&src=bcinfo&order_id={$order_id}"; // http://www.example.com/?bitcoinway=1&order_id=74&src=bcinfo
-   		BWWC__log_event (__FILE__, __LINE__, "Calling BWWC__generate_temporary_bitcoin_address(). Payments to be forwarded to: '{$bitcoin_addr_merchant}' with callback URL: '{$callback_url}' ...");
+  		$bitcoins_address = false;
 
-   			// This function generates temporary bitcoin address and schedules IPN callback at the same
-			$ret_array = BWWC__generate_temporary_bitcoin_address ($bitcoin_addr_merchant, $callback_url);
+  		$order_info =
+  			array (
+  				'order_id'				=> $order_id,
+  				'order_total'			=> $order_total_in_btc,
+  				'order_datetime'  => date('Y-m-d H:i:s T'),
+  				'requested_by_ip'	=> @$_SERVER['REMOTE_ADDR'],
+  				);
 
+  		$ret_info_array = array();
 
-			$bitcoins_address = @$ret_array['generated_bitcoin_address'];
+			if ($this->service_provider == 'blockchain.info')
+			{
+				$bitcoin_addr_merchant = $this->bitcoin_addr_merchant;
+				$secret_key = substr(md5(microtime()), 0, 16);	# Generate secret key to be validate upon receiving IPN callback to prevent spoofing.
+				$callback_url = trailingslashit (home_url()) . "?wc-api=BWWC_Bitcoin&secret_key={$secret_key}&bitcoinway=1&src=bcinfo&order_id={$order_id}"; // http://www.example.com/?bitcoinway=1&order_id=74&src=bcinfo
+	   		BWWC__log_event (__FILE__, __LINE__, "Calling BWWC__generate_temporary_bitcoin_address__blockchain_info(). Payments to be forwarded to: '{$bitcoin_addr_merchant}' with callback URL: '{$callback_url}' ...");
+
+	   			// This function generates temporary bitcoin address and schedules IPN callback at the same
+				$ret_info_array = BWWC__generate_temporary_bitcoin_address__blockchain_info ($bitcoin_addr_merchant, $callback_url);
+	
+				/*
+            $ret_info_array = array (
+               'result'                      => 'success', // OR 'error'
+               'message'										 => '...',
+               'host_reply_raw'              => '......',
+               'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+               );
+				*/
+				$bitcoins_address = @$ret_info_array['generated_bitcoin_address'];
+			}
+			else if ($this->service_provider == 'electrum-wallet')
+			{
+				// Generate bitcoin address for electrum wallet provider.
+				/*
+            $ret_info_array = array (
+               'result'                      => 'success', // OR 'error'
+               'message'										 => '...',
+               'host_reply_raw'              => '......',
+               'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+               );
+				*/
+				$ret_info_array = BWWC__get_bitcoin_address_for_payment__electrum ($this->electrum_master_public_key, $order_info);
+				$bitcoins_address = @$ret_info_array['generated_bitcoin_address'];
+			}
+
 			if (!$bitcoins_address)
 			{
-				$msg = "ERROR: cannot generate bitcoin address for the order. Host reply: '" . @$ret_array['host_reply_raw'] . "'";
+				$msg = "ERROR: cannot generate bitcoin address for the order: '" . @$ret_info_array['message'] . "'";
       			BWWC__log_event (__FILE__, __LINE__, $msg);
       			exit ('<h2 style="color:red;">' . $msg . '</h2>');
 			}
-   		
+
    		BWWC__log_event (__FILE__, __LINE__, "     Generated unique bitcoin address: '{$bitcoins_address}' for order_id " . $order_id);
 
-     	update_post_meta (
-     		$order_id, 			// post id ($order_id)
-     		'secret_key', 	// meta key
-     		$secret_key 		// meta value. If array - will be auto-serialized
-     		);
+			if ($this->service_provider == 'blockchain.info')
+			{
+	     	update_post_meta (
+	     		$order_id, 			// post id ($order_id)
+	     		'secret_key', 	// meta key
+	     		$secret_key 		// meta value. If array - will be auto-serialized
+	     		);
+	 		}
+
      	update_post_meta (
      		$order_id, 			// post id ($order_id)
      		'order_total_in_btc', 	// meta key
@@ -411,7 +649,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				str_replace (
 					'{{{EXTRA_INSTRUCTIONS}}}',
 
-					$this->instructions_multi_payment_str,		
+					$this->instructions_multi_payment_str,
 					$instructions
 					);
 
@@ -492,31 +730,15 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 					$order_total_in_btc = get_post_meta($order_id, 'order_total_in_btc', true);
 					if ($paid_total_so_far >= $order_total_in_btc)
 					{
-		            	// Payment completed
-						// Make sure this logic is done only once, in case customer keep sending payments :)
-						if (!get_post_meta($order_id, '_payment_completed', true))
-						{
-	      					BWWC__log_event (__FILE__, __LINE__, "Success: order paid in full (Bitcoins: now/total received/needed = {$value_in_btc}/{$paid_total_so_far}/{$order_total_in_btc}). Processing and notifying customer ...");
-
-							update_post_meta ($order_id, '_payment_completed', '1');
-
-							// Instantiate order object.
-							$order = new WC_Order($order_id);
-							$order->add_order_note( __('Order paid in full', 'woocommerce') );
-	                		$order->payment_complete();
-						}
-						else
-						{
-	      					BWWC__log_event (__FILE__, __LINE__, "NOTE: another payment notification received, even though '_payment_completed' is true. Bitcoins: now/total received/needed = {$value_in_btc}/{$paid_total_so_far}/{$order_total_in_btc}. Generous customer? :)");
-						}
+						BWWC__process_payment_completed_for_order ($order_id, false);
 					}
 					else
 					{
-	      				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment received (for BTC {$value_in_btc}), but not enough yet to cover the required total. Will be waiting for more. Bitcoins: now/total received/needed = {$value_in_btc}/{$paid_total_so_far}/{$order_total_in_btc}");
+     				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment received (for BTC {$value_in_btc}), but not enough yet to cover the required total. Will be waiting for more. Bitcoins: now/total received/needed = {$value_in_btc}/{$paid_total_so_far}/{$order_total_in_btc}");
 					}
 
-				    // Reply '*ok*' so no more notifications are sent
-				    exit ('*ok*');
+			    // Reply '*ok*' so no more notifications are sent
+			    exit ('*ok*');
 				}
 				else
 				{
@@ -610,3 +832,26 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	//=======================================================================
 }
 //###########################################################################
+
+//===========================================================================
+function BWWC__process_payment_completed_for_order ($order_id, $bitcoins_paid=false)
+{
+
+	if ($bitcoins_paid)
+		update_post_meta ($order_id, 'bitcoins_paid_total', $bitcoins_paid);
+
+	// Payment completed
+	// Make sure this logic is done only once, in case customer keep sending payments :)
+	if (!get_post_meta($order_id, '_payment_completed', true))
+	{
+		update_post_meta ($order_id, '_payment_completed', '1');
+
+		BWWC__log_event (__FILE__, __LINE__, "Success: order '{$order_id}' paid in full. Processing and notifying customer ...");
+
+		// Instantiate order object.
+		$order = new WC_Order($order_id);
+		$order->add_order_note( __('Order paid in full', 'woocommerce') );
+	  $order->payment_complete();
+	}
+}
+//===========================================================================

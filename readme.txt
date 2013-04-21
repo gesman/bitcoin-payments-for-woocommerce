@@ -5,19 +5,21 @@ Tags: bitcoin, bitcoin wordpress plugin, bitcoin plugin, bitcoin payments, accep
 Requires at least: 3.0.1
 Tested up to: 3.5.1
 Stable tag: trunk
-License: GPLv2 or later																	
-License URI: http://www.gnu.org/licenses/gpl-2.0.html		
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
 Bitcoin Payments for WooCommerce is a Wordpress plugin that allows to accept bitcoins at WooCommerce-powered online stores.
 
 == Description ==
 
-Your online store must use WooCommerce platform (free wordpress plugin). 
+Your online store must use WooCommerce platform (free wordpress plugin).
 Once you installed and activated WooCommerce, you may install and activate Bitcoin Payments for WooCommerce.
 
 = Benefits =
 
+* Accept payment directly into your personal Electrum wallet.
+* Electrum wallet payment option completely removes dependency on any third party service and middlemen.
 * Accept payment in bitcoins for physical and digital downloadable products.
 * Add bitcoin payments option to your existing online store with alternative main currency.
 * Flexible exchange rate calculations fully managed via administrative settings.
@@ -42,9 +44,20 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 == Screenshots ==
 
-soon
+1. Checkout with option for bitcoin payment.
+2. Order received screen, including QR code of bitcoin address and payment amount.
+3. Bitcoin Gsteway settings screen .
+
 
 == Changelog ==
+
+= 2.02 =
+* Added full support for Electrum Wallet's Master Public Key - the math algorithms allowing for the most reliable, anonymous and secure way to accept online payments in bitcoins.
+* Improved overall speed and responsiveness due to multilevel caching logic.
+
+= 1.28 =
+* Added QR code image to Bitcoin checkout screen and email.
+  Credits: WebDesZ: http://wordpress.org/support/profile/webdesz
 
 = 1.27 =
 * Fixed: very slow loading due to MtGox exchange rate API issues.
