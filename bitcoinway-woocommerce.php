@@ -11,7 +11,7 @@
 Plugin Name: Bitcoin Payments for WooCommerce
 Plugin URI: http://www.bitcoinway.com/
 Description: Bitcoin Payments for WooCommerce plugin allows you to accept payments in bitcoins for physical and digital products at your WooCommerce-powered online store.
-Version: 2.03
+Version: 2.10
 Author: BitcoinWay
 Author URI: http://www.bitcoinway.com/
 License: GNU General Public License 2.0 (GPL) http://www.gnu.org/licenses/gpl.html
@@ -43,35 +43,33 @@ BWWC_set_lang_file();
 // activating the default values
 function BWWC_activate()
 {
-	global  $g_BWWC__config_defaults;
+    global  $g_BWWC__config_defaults;
 
-	$bwwc_default_options = $g_BWWC__config_defaults;
+    $bwwc_default_options = $g_BWWC__config_defaults;
 
-	// This will overwrite default options with already existing options but leave new options (in case of upgrading to new version) untouched.
-	$bwwc_settings = BWWC__get_settings ();
-	if (is_array ($bwwc_settings))
-	{
-	 	foreach ($bwwc_settings as $key=>$value)
-	  	$bwwc_default_options[$key] = $value;
- 	}
+    // This will overwrite default options with already existing options but leave new options (in case of upgrading to new version) untouched.
+    $bwwc_settings = BWWC__get_settings ();
 
-	update_option (BWWC_SETTINGS_NAME, $bwwc_default_options);
+    foreach ($bwwc_settings as $key=>$value)
+    	$bwwc_default_options[$key] = $value;
 
-	// Re-get new settings.
-	$bwwc_settings = BWWC__get_settings ();
+    update_option (BWWC_SETTINGS_NAME, $bwwc_default_options);
 
-	// Create necessary database tables if not already exists...
-	BWWC__create_database_tables ($bwwc_settings);
+    // Re-get new settings.
+    $bwwc_settings = BWWC__get_settings ();
 
-	//----------------------------------
-	// Setup cron jobs
+    // Create necessary database tables if not already exists...
+    BWWC__create_database_tables ($bwwc_settings);
 
-	if ($bwwc_settings['enable_soft_cron_job'] && !wp_next_scheduled('BWWC_cron_action'))
-	{
-		$cron_job_schedule_name = strpos($_SERVER['HTTP_HOST'], 'ttt.com')===FALSE ? $bwwc_settings['soft_cron_job_schedule_name'] : 'seconds_30';
-		wp_schedule_event(time(), $cron_job_schedule_name, 'BWWC_cron_action');
-	}
-	//----------------------------------
+    //----------------------------------
+    // Setup cron jobs
+
+    if ($bwwc_settings['enable_soft_cron_job'] && !wp_next_scheduled('BWWC_cron_action'))
+    {
+    	$cron_job_schedule_name = strpos($_SERVER['HTTP_HOST'], 'ttt.com')===FALSE ? $bwwc_settings['soft_cron_job_schedule_name'] : 'seconds_30';
+    	wp_schedule_event(time(), $cron_job_schedule_name, 'BWWC_cron_action');
+    }
+    //----------------------------------
 
 }
 //---------------------------------------------------------------------------

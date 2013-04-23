@@ -8,7 +8,7 @@ http://www.bitcoinway.com/
 // Global definitions
 if (!defined('BWWC_PLUGIN_NAME'))
   {
-  define('BWWC_VERSION',           '2.03');
+  define('BWWC_VERSION',           '2.10');
 
   //-----------------------------------------------
   define('BWWC_EDITION',           'Standard');    
@@ -21,10 +21,9 @@ if (!defined('BWWC_PLUGIN_NAME'))
   // i18n plugin domain for language files
   define('BWWC_I18N_DOMAIN',       'bwwc');
 
-////// Add these back when GMP code will support it
-//////  if (extension_loaded('gmp') && !defined('USE_EXT'))
-//////    define ('USE_EXT', 'GMP');
-  if (extension_loaded('bcmath') && !defined('USE_EXT'))
+  if (extension_loaded('gmp') && !defined('USE_EXT'))
+    define ('USE_EXT', 'GMP');
+  else if (extension_loaded('bcmath') && !defined('USE_EXT'))
     define ('USE_EXT', 'BCMATH');
   }
 //---------------------------------------------------------------------------

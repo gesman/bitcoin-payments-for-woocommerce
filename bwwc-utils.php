@@ -42,15 +42,6 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
    $funds_received_value_expires_in_secs = $bwwc_settings['funds_received_value_expires_in_mins'] * 60;
    $assigned_address_expires_in_secs     = $bwwc_settings['assigned_address_expires_in_mins'] * 60;
 
-  ///////////!!!
-   // This done in cron
-   // 0. Force-expire addresses that did not receive payments within 2 hours after beign assigned to prospect.
-   //$query = "UPDATE `$btc_addresses_table_name` SET `status` = 'unused' WHERE `status`='assigned' AND `assigned_at` < (NOW() - INTERVAL 2 HOUR);";
-   //$wpdb->query ($query);
-
-   // 1. Search DB for 'unused' addresses. Validate it's virginity by analyzing blockchain. Update DB if necessary.
-  ///////////!!!
-
    $clean_address = NULL;
    $current_time = time();
 

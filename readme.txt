@@ -36,12 +36,6 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 2. Activate.
 
 
-== Remove plugin ==
-
-1. Deactivate plugin through the 'Plugins' menu in WordPress
-2. Delete plugin through the 'Plugins' menu in WordPress
-
-
 == Screenshots ==
 
 1. Checkout with option for bitcoin payment.
@@ -49,7 +43,30 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 3. Bitcoin Gsteway settings screen.
 
 
+== Remove plugin ==
+
+1. Deactivate plugin through the 'Plugins' menu in WordPress
+2. Delete plugin through the 'Plugins' menu in WordPress
+
+
+== Supporters ==
+
+* Yifu Guo: http://bitsyn.com/
+* Chris Savery: https://github.com/bkkcoins/misc
+* lowcostego: http://wordpress.org/support/profile/lowcostego
+* WebDesZ: http://wordpress.org/support/profile/webdesz
+* ninjastik: http://wordpress.org/support/profile/ninjastik
+
+
 == Changelog ==
+
+= 2.10 =
+* Added support for much faster GMP math library to generate bitcoin addresses. This improves performance of checkout 3x - 4x times.
+  Special thanks to Chris Savery: https://github.com/bkkcoins/misc
+* Improved compatibility with older versions of PHP now allowing to use plugin in wider range of hosting services.
+
+= 2.04 =
+* Improved upgradeability from older versions.
 
 = 2.02 =
 * Added full support for Electrum Wallet's Master Public Key - the math algorithms allowing for the most reliable, anonymous and secure way to accept online payments in bitcoins.

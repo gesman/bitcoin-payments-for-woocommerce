@@ -132,17 +132,9 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		    		$reason_message = __("Electrum Master Public Key is invalid. Must be 128 characters long, consisting of digits and letters: 'a b c d e f'", 'woocommerce');
 		    		$valid = false;
 		    	}
-////// Add it back when GMP support will be included in code
-//////		    	else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
-//////
-		    	else if (!extension_loaded('bcmath'))
-//////
+		    	else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
 		    	{
-////// Add it back when GMP support will be included in code
-//////		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' nor 'gmp' extensions. \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
-//////
-		    		$reason_message = __("ERROR: 'bcmath' math extension is not loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable 'bcmath' extension. \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
-//////
+		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)! \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
 		    		$valid = false;
 		    	}
 	    	}

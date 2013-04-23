@@ -134,17 +134,19 @@ return;
 //===========================================================================
 function BWWC__get_settings ($key=false)
 {
-   global   $g_BWWC__plugin_directory_url;
-   global   $g_BWWC__config_defaults;
+  global   $g_BWWC__plugin_directory_url;
+  global   $g_BWWC__config_defaults;
 
-   $bwwc_settings = get_option (BWWC_SETTINGS_NAME);
+  $bwwc_settings = get_option (BWWC_SETTINGS_NAME);
+  if (!is_array($bwwc_settings))
+    $bwwc_settings = array();
 
 
 
-   if (!$key)
-      return ($bwwc_settings);
-   else
-      return (@$bwwc_settings[$key]);
+  if ($key)
+    return (@$bwwc_settings[$key]);
+  else
+    return ($bwwc_settings);
 }
 //===========================================================================
 

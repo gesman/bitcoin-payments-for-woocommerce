@@ -75,5 +75,60 @@ class gmp_Utils {
         }
     }
 
+    public static function gmp_dec2base($dec, $base, $digits=FALSE) {
+        if (extension_loaded('gmp')) {
+            if ($base < 2 or $base > 256)
+                die("Invalid Base: " . $base);
+            $value = "";
+            if (!$digits)
+                $digits = self::digits($base);
+            $dec = gmp_init($dec);
+            $base = gmp_init($base);
+            while (gmp_cmp($dec, gmp_sub($base, '1')) > 0) {
+                $rest = gmp_mod($dec, $base);
+                $dec = gmp_div($dec, $base);
+                $value = $digits[gmp_intval($rest)] . $value;
+            }
+            $value = $digits[gmp_intval($dec)] . $value;
+            return (string) $value;
+        } else {
+            throw new ErrorException("Please install GMP");
+        }
+    }
+
+    public static function gmp_base2dec($value, $base, $digits=FALSE) {
+        if (extension_loaded('gmp')) {
+            if ($base < 2 or $base > 256)
+                die("Invalid Base: " . $base);
+            if ($base < 37)
+                $value = strtolower($value);
+            if (!$digits)
+                $digits = self::digits($base);
+            $size = strlen($value);
+            $dec = "0";
+            for ($loop = 0; $loop < $size; $loop++) {
+                $element = strpos($digits, $value[$loop]);
+                $power = gmp_pow(gmp_init($base), $size - $loop - 1);
+                $dec = gmp_add($dec, gmp_mul($element, $power));
+            }
+            return gmp_strval($dec);
+        } else {
+            throw new ErrorException("Please install GMP");
+        }
+    }
+
+    public static function digits($base) {
+        if ($base > 64) {
+            $digits = "";
+            for ($loop = 0; $loop < 256; $loop++) {
+                $digits.=chr($loop);
+            }
+        } else {
+            $digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+            $digits.="ABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
+        }
+        $digits = substr($digits, 0, $base);
+        return (string) $digits;
+    }
 }
 ?>
