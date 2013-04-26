@@ -60,6 +60,9 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 == Changelog ==
 
+= 2.11 =
+* Minor upgrade - screenshots fix.
+
 = 2.10 =
 * Added support for much faster GMP math library to generate bitcoin addresses. This improves performance of checkout 3x - 4x times.
   Special thanks to Chris Savery: https://github.com/bkkcoins/misc
