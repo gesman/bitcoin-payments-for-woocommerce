@@ -60,6 +60,9 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 == Changelog ==
 
+= 2.12 =
+* Added 'bitcoins_refunded' field to order to input refunded value for tracking.
+
 = 2.11 =
 * Minor upgrade - screenshots fix.
 
