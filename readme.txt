@@ -52,6 +52,7 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 == Supporters ==
 
 * Yifu Guo: http://bitsyn.com/
+* Bitcoin Grants: http://bitcoingrant.org/
 * Chris Savery: https://github.com/bkkcoins/misc
 * lowcostego: http://wordpress.org/support/profile/lowcostego
 * WebDesZ: http://wordpress.org/support/profile/webdesz
