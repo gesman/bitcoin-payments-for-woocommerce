@@ -40,7 +40,7 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 1. Checkout with option for bitcoin payment.
 2. Order received screen, including QR code of bitcoin address and payment amount.
-3. Bitcoin Gsteway settings screen.
+3. Bitcoin Gateway settings screen.
 
 
 == Remove plugin ==
