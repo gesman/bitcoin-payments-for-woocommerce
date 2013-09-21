@@ -44,11 +44,15 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
 
    $clean_address = NULL;
    $current_time = time();
+   $reuse_expired_addresses_query_part = "";
 
-   if ($bwwc_settings['reuse_expired_addresses'])
-      $reuse_expired_addresses_query_part = "OR (`status`='assigned' AND `total_received_funds`='0' AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs'))";
-   else
-      $reuse_expired_addresses_query_part = "";
+   if ($bwwc_settings['reuse_expired_addresses']){
+      $reuse_expired_addresses_query_part = "OR (
+        `status`='assigned' AND 
+        `total_received_funds`='0' AND 
+        (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs') AND
+        (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs'))";
+   }
 
    //-------------------------------------------------------
    // Quick scan for ready-to-use address
@@ -62,7 +66,6 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
       "SELECT `btc_address` FROM `$btc_addresses_table_name`
          WHERE `origin_id`='$origin_id'
          AND `total_received_funds`='0'
-         AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
          AND (`status`='unused' $reuse_expired_addresses_query_part)
          ORDER BY `index_in_wallet` ASC
          LIMIT 1"; // Try to use lower indexes first
