@@ -237,7 +237,6 @@ function BWWC_cron_job_worker ($hardcron=false)
         "SELECT COUNT(*) as `total_unused_addresses` FROM `$btc_addresses_table_name`
            WHERE `origin_id`='$origin_id'
            AND `total_received_funds`='0'
-           AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
            AND (`status`='unused' $reuse_expired_addresses_query_part)
            ";
       $total_unused_addresses = $wpdb->get_var ($query);
