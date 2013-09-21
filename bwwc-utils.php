@@ -64,7 +64,8 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
          AND `total_received_funds`='0'
          AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
          AND (`status`='unused' $reuse_expired_addresses_query_part)
-         ORDER BY `index_in_wallet` ASC;"; // Try to use lower indexes first
+         ORDER BY `index_in_wallet` ASC
+         LIMIT 1"; // Try to use lower indexes first
    $clean_address = $wpdb->get_var ($query);
    //-------------------------------------------------------
 
@@ -80,14 +81,16 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
       //
       // Hence - any returned address with freshened balance==0 will be clean to use.
       $query =
-         "SELECT * FROM `$btc_addresses_table_name`
+         "SELECT btc_address, address_meta 
+          FROM `$btc_addresses_table_name`
             WHERE `origin_id`='$origin_id'
             AND (
                `status`='unused'
                OR `status`='unknown'
                $reuse_expired_addresses_query_part
                )
-            ORDER BY `index_in_wallet` ASC;"; // Try to use lower indexes first
+            ORDER BY `index_in_wallet` ASC
+            LIMIT 5"; // Try to use lower indexes first
       $addresses_to_verify_for_zero_balances_rows = $wpdb->get_results ($query, ARRAY_A);
       if (!is_array($addresses_to_verify_for_zero_balances_rows))
          $addresses_to_verify_for_zero_balances_rows = array();
