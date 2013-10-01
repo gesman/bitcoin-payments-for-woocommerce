@@ -21,7 +21,7 @@ $g_BWWC__config_defaults = array (
 
    // ------- Hidden constants
    'supported_currencies_arr'             =>  array ('USD', 'AUD', 'CAD', 'CHF', 'CNY', 'DKK', 'EUR', 'GBP', 'HKD', 'JPY', 'NZD', 'PLN', 'RUB', 'SEK', 'SGD', 'THB'),
-   'database_schema_version'              =>  1.1,
+   'database_schema_version'              =>  1.2,
    'assigned_address_expires_in_mins'     =>  12*60,  // 12 hours to pay for order and recieve necessary number of confirmations.
    'funds_received_value_expires_in_mins' =>  '10',
    'starting_index_for_new_btc_addresses' =>  '2',    // Generate new addresses for the wallet starting from this index.
@@ -346,12 +346,18 @@ function BWWC__create_database_tables ($bwwc_settings)
   // upgrade bwwc_btc_addresses table, add additional indexes 
   if (! $b_first_time){
     $bwwc_settings = BWWC__get_settings();
-    if (! is_array($bwwc_settings) ||
-      ! isset($bwwc_settings['database_schema_version']) ||
-      floatval($bwwc_settings['database_schema_version']) < 1.1){
+    $version = is_array($bwwc_settings) && isset($bwwc_settings['database_schema_version']) ? floatval($bwwc_settings['database_schema_version']) : 0;
+    if ($version < 1.1){
       $query = "ALTER TABLE `$btc_addresses_table_name` 
-        ADD INDEX `origin_id` (`origin_id` ASC) 
-        , ADD INDEX `status` (`status` ASC)";
+                ADD INDEX `origin_id` (`origin_id` ASC),
+                ADD INDEX `status` (`status` ASC)";
+      $wpdb->query ($query);
+    }
+
+    if ($version < 1.2){
+      $query = "ALTER TABLE `$btc_addresses_table_name` 
+                DROP INDEX `index_in_wallet`, 
+                ADD INDEX `index_in_wallet` (`index_in_wallet` DESC)"; 
       $wpdb->query ($query);
     }
   }
