@@ -325,7 +325,7 @@ function BWWC__create_database_tables ($bwwc_settings)
     `address_meta` text NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `btc_address` (`btc_address`),
-    UNIQUE KEY `index_in_wallet` (`index_in_wallet`),
+    KEY `index_in_wallet` (`index_in_wallet` DESC),
     KEY `origin_id` (`origin_id`),
     KEY `status` (`status`)
     );";
