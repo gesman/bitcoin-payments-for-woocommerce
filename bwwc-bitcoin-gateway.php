@@ -560,11 +560,10 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			global $woocommerce;
 
 			//	Updating the order status:
-			// Mark as on-hold (we're awaiting for bitcoins payment to arrive)
-			$order->update_status('on-hold', __('Awaiting bitcoin payment to arrive', 'woocommerce'));
-
-			// Reduce stock levels
-			$order->reduce_order_stock();
+			// Mark as pending (we're awaiting for bitcoins payment to arrive), not 'on-hold' since
+            // woocommerce does not automatically cancel expired on-hold orders. Woocommerce handles holding the stock 
+            // for pending orders until order payment is complete.
+			$order->update_status('pending', __('Awaiting bitcoin payment to arrive', 'woocommerce'));
 
 			// Remove cart
 			$woocommerce->cart->empty_cart();
@@ -630,7 +629,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		function BWWC__email_instructions ($order, $sent_to_admin)
 		{
 	    	if ($sent_to_admin) return;
-	    	if ($order->status !== 'on-hold') return;
+	    	if (! in_array($order->status, array('pending', 'on-hold'), true)) return;
 	    	if ($order->payment_method !== 'bitcoin') return;
 
 	    	// Assemble payment instructions for email
