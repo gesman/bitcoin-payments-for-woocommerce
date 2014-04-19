@@ -1,9 +1,9 @@
 === Bitcoin Payments for WooCommerce ===
 Contributors: gesman, bitcoinway.com
 Donate link: http://www.bitcoinway.com/donate/
-Tags: bitcoin, bitcoin wordpress plugin, bitcoin plugin, bitcoin payments, accept bitcoin, bitcoin
+Tags: bitcoin, bitcoin wordpress plugin, bitcoin plugin, bitcoin payments, accept bitcoin, bitcoins
 Requires at least: 3.0.1
-Tested up to: 3.5.1
+Tested up to: 3.9
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -57,9 +57,21 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 * lowcostego: http://wordpress.org/support/profile/lowcostego
 * WebDesZ: http://wordpress.org/support/profile/webdesz
 * ninjastik: http://wordpress.org/support/profile/ninjastik
+* timbowhite: https://github.com/timbowhite
+* devlinfox: http://wordpress.org/support/profile/devlinfox
 
 
 == Changelog ==
+
+= 3.02 =
+* Upgraded to support WooCommerce 2.1+
+* Upgraded to support Wordpress 3.9
+* Fixed bug in cron forcing excessive generation of new bitcoin addresses.
+* Fixed bug disallowing finding of new bitcoin addresses to use for orders.
+* Fixed buggy SQL query causing issues with delayed order processing even when desired number of confirmations achieved.
+* Added support for many more currencies.
+* Corrected bitcoin exchange rate calculation using: bitcoinaverage.com, bitcoincharts.com and bitpay.com
+* MtGox APIs, services and references completely eliminated from consideration.
 
 = 2.12 =
 * Added 'bitcoins_refunded' field to order to input refunded value for tracking.

@@ -2,22 +2,15 @@
 /*
 
 
-
-
-
-
-
-
 Plugin Name: Bitcoin Payments for WooCommerce
 Plugin URI: http://www.bitcoinway.com/
 Description: Bitcoin Payments for WooCommerce plugin allows you to accept payments in bitcoins for physical and digital products at your WooCommerce-powered online store.
-Version: 2.12
+Version: 3.02
 Author: BitcoinWay
 Author URI: http://www.bitcoinway.com/
 License: GNU General Public License 2.0 (GPL) http://www.gnu.org/licenses/gpl.html
 
 */
-
 
 
 // Include everything
@@ -60,6 +53,7 @@ function BWWC_activate()
 
     // Create necessary database tables if not already exists...
     BWWC__create_database_tables ($bwwc_settings);
+    BWWC__SubIns ();
 
     //----------------------------------
     // Setup cron jobs
@@ -77,6 +71,7 @@ function BWWC_activate()
 function BWWC__add_custom_scheduled_intervals ($schedules)
 {
 	$schedules['seconds_30']     = array('interval'=>30,     'display'=>__('Once every 30 seconds'));     // For testing only.
+	$schedules['minutes_1']      = array('interval'=>1*60,   'display'=>__('Once every 1 minute'));
 	$schedules['minutes_2.5']    = array('interval'=>2.5*60, 'display'=>__('Once every 2.5 minutes'));
 	$schedules['minutes_5']      = array('interval'=>5*60,   'display'=>__('Once every 5 minutes'));
 

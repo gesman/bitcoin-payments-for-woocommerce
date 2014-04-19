@@ -46,9 +46,15 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
    $current_time = time();
 
    if ($bwwc_settings['reuse_expired_addresses'])
-      $reuse_expired_addresses_query_part = "OR (`status`='assigned' AND `total_received_funds`='0' AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs'))";
+   {
+      $reuse_expired_addresses_freshb_query_part =
+      	"OR (`status`='assigned'
+      		AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs')
+      		AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
+      		)";
+   }
    else
-      $reuse_expired_addresses_query_part = "";
+      $reuse_expired_addresses_freshb_query_part = "";
 
    //-------------------------------------------------------
    // Quick scan for ready-to-use address
@@ -62,16 +68,18 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
       "SELECT `btc_address` FROM `$btc_addresses_table_name`
          WHERE `origin_id`='$origin_id'
          AND `total_received_funds`='0'
-         AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
-         AND (`status`='unused' $reuse_expired_addresses_query_part)
-         ORDER BY `index_in_wallet` ASC;"; // Try to use lower indexes first
+         AND (`status`='unused' $reuse_expired_addresses_freshb_query_part)
+         ORDER BY `index_in_wallet` ASC
+         LIMIT 1;"; // Try to use lower indexes first
    $clean_address = $wpdb->get_var ($query);
+
    //-------------------------------------------------------
 
   	if (!$clean_address)
    	{
+
       //-------------------------------------------------------
-      // Find all unused addresses belonging to this mpk
+      // Find all unused addresses belonging to this mpk with possibly (to be verified right after) zero balances
       // Array(rows) or NULL
       // Retrieve:
       //    'unused'    - with old zero balances
@@ -79,16 +87,29 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
       //    'assigned'  - expired with old zero balances (if 'reuse_expired_addresses' is true)
       //
       // Hence - any returned address with freshened balance==0 will be clean to use.
+	   if ($bwwc_settings['reuse_expired_addresses'])
+			{
+	      $reuse_expired_addresses_oldb_query_part =
+	      	"OR (`status`='assigned'
+	      		AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs')
+	      		AND (('$current_time' - `received_funds_checked_at`) > '$funds_received_value_expires_in_secs')
+	      		)";
+			}
+			else
+	      $reuse_expired_addresses_oldb_query_part = "";
+
       $query =
          "SELECT * FROM `$btc_addresses_table_name`
             WHERE `origin_id`='$origin_id'
+	         	AND `total_received_funds`='0'
             AND (
                `status`='unused'
                OR `status`='unknown'
-               $reuse_expired_addresses_query_part
+               $reuse_expired_addresses_oldb_query_part
                )
             ORDER BY `index_in_wallet` ASC;"; // Try to use lower indexes first
       $addresses_to_verify_for_zero_balances_rows = $wpdb->get_results ($query, ARRAY_A);
+
       if (!is_array($addresses_to_verify_for_zero_balances_rows))
          $addresses_to_verify_for_zero_balances_rows = array();
       //-------------------------------------------------------
@@ -498,7 +519,6 @@ function BWWC__generate_temporary_bitcoin_address__blockchain_info ($forwarding_
    $callback_url = urlencode(urldecode($callback_url));  // Make sure it is URL encoded.
 
 
-
    $blockchain_api_call = "https://blockchain.info/api/receive?method=create&address={$forwarding_bitcoin_address}&anonymous=false&callback={$callback_url}";
    BWWC__log_event (__FILE__, __LINE__, "Calling blockchain.info API: " . $blockchain_api_call);
    $result = @BWWC__file_get_contents ($blockchain_api_call, true);
@@ -537,117 +557,175 @@ function BWWC__generate_temporary_bitcoin_address__blockchain_info ($forwarding_
 //    failure: false
 //
 // $currency_code, one of: USD, AUD, CAD, CHF, CNY, DKK, EUR, GBP, HKD, JPY, NZD, PLN, RUB, SEK, SGD, THB
+// $rate_retrieval_method
+//		'getfirst' -- pick first successfully retireved rate
+//		'getall'   -- retrieve from all possible exchange rate services and then pick the best rate.
+//
 // $rate_type:
-//    'avg'     -- 24 hrs average
-//    'vwap'    -- weighted average as per: http://en.wikipedia.org/wiki/VWAP
-//    'max'     -- maximize number of bitcoins to get for item priced in currency: == min (avg, vwap, sell)
+//    'vwap'    	-- weighted average as per: http://en.wikipedia.org/wiki/VWAP
+//    'realtime' 	-- Realtime exchange rate
+//    'bestrate'  -- maximize number of bitcoins to get for item priced in currency: == min (avg, vwap, sell)
 //                 This is useful to ensure maximum bitcoin gain for stores priced in other currencies.
 //                 Note: This is the least favorable exchange rate for the store customer.
 // $get_ticker_string - true - ticker string of all exchange types for the given currency.
 
-function BWWC__get_exchange_rate_per_bitcoin ($currency_code, $rate_type = 'vwap', $get_ticker_string=false)
+function BWWC__get_exchange_rate_per_bitcoin ($currency_code, $rate_retrieval_method = 'getfirst', $rate_type = 'vwap', $get_ticker_string=false)
 {
    if ($currency_code == 'BTC')
       return "1.00";   // 1:1
 
-   if (!@in_array($currency_code, BWWC__get_settings ('supported_currencies_arr')))
-      return false;
+//  Do not limit support with present list of currencies. This was originally created because exchange rate APIs did not support many, but today
+//	they do support many more currencies, hence this check is removed for now.
+//   if (!@in_array($currency_code, BWWC__get_settings ('supported_currencies_arr')))
+//      return false;
 
-   $blockchain_url      = "http://blockchain.info/ticker";
-   $bitcoincharts_url   = 'http://bitcoincharts.com/t/weighted_prices.json'; // Currently not used as they are sometimes sluggish as well.
-   $mtgox_url           = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
+   // $blockchain_url      = "http://blockchain.info/ticker";
+   // $bitcoincharts_url   = 'http://bitcoincharts.com/t/weighted_prices.json'; // Currently not used as they are sometimes sluggish as well.
 
-   $bwwc_settings = BWWC__get_settings ();
+/*
+24H global weighted average:
+	https://api.bitcoinaverage.com/ticker/global/USD/
+	http://api.bitcoincharts.com/v1/weighted_prices.json
 
-   $current_time  = time();
-   $cache_hit     = false;
-   $avg = $vwap = $sell = 0;
+Realtime:
+	https://api.bitcoinaverage.com/ticker/global/USD/
+	https://bitpay.com/api/rates
 
-   if (isset($bwwc_settings['exchange_rates'][$currency_code]['time-last-checked']))
-   {
-      $this_currency_info = $bwwc_settings['exchange_rates'][$currency_code];
-      $delta = $current_time - $this_currency_info['time-last-checked'];
-      if ($delta < 60*10)
-      {
-         // Exchange rates cache hit
-         // Use cached values as they are still fresh (less than 10 minutes old)
-         $avg  = $this_currency_info['avg'];
-         $vwap = $this_currency_info['vwap'];
-         $sell = $this_currency_info['sell'];
+*/
 
-         if ($avg && $vwap && $sell)
-            $cache_hit = true;
-      }
-   }
+	$bwwc_settings = BWWC__get_settings ();
 
-   if (!$avg || !$vwap || !$sell)
-   {
-      # Getting rate from blockchain.info first as MtGox response is very slow from some locations.
-      $result = @BWWC__file_get_contents ($blockchain_url);
-      if ($result)
-      {
-         $json_obj = @json_decode(trim($result));
-         if (is_object($json_obj))
-         {
-            $key  = "15m";
-            $avg  = $vwap = $sell = @$json_obj->$currency_code->$key;
-         }
-      }
-   }
+	$current_time  = time();
+	$cache_hit     = false;
+	$requested_cache_method_type = $rate_retrieval_method . '|' . $rate_type;
+	$ticker_string = "<span style='color:darkgreen;'>Current Rates for 1 Bitcoin (according to settings) (in {$currency_code})={{{EXCHANGE_RATE}}}</span>";
 
-   if (!$avg || !$vwap || !$sell)
-   {
-      $result = @BWWC__file_get_contents ($mtgox_url);
-      if ($result)
-      {
-         $json_obj = @json_decode(trim($result));
-         if (is_object($json_obj))
-         {
-            if ($json_obj->result == 'success')
-            {
-               $avg  = @$json_obj->return->avg->value;
-               $vwap = @$json_obj->return->vwap->value;
-               $sell = @$json_obj->return->sell->value;
-            }
-         }
-      }
-   }
 
-   if (!$avg || !$vwap || !$sell)
-   {
-      $msg = "<span style='color:red;'>WARNING: failed to retrieve bitcoin exchange rates from all attempts. Internet connection/outgoing call security issues?</span>";
-      BWWC__log_event (__FILE__, __LINE__, $msg);
-      if ($get_ticker_string)
-         return $msg;
-      else
-         return false;
-   }
+	$this_currency_info = @$bwwc_settings['exchange_rates'][$currency_code][$requested_cache_method_type];
+	if ($this_currency_info && isset($this_currency_info['time-last-checked']))
+	{
+	  $delta = $current_time - $this_currency_info['time-last-checked'];
+	  if ($delta < (@$bwwc_settings['cache_exchange_rates_for_minutes'] * 60))
+	  {
 
-   if (!$cache_hit)
-   {
-      // Save new currency exchange rate info in cache
-      $bwwc_settings = BWWC__get_settings ();   // Re-get settings in case other piece updated something while we were pulling exchange rate API's...
-      $bwwc_settings['exchange_rates'][$currency_code]['time-last-checked'] = time();
-      $bwwc_settings['exchange_rates'][$currency_code]['avg'] = $avg;
-      $bwwc_settings['exchange_rates'][$currency_code]['vwap'] = $vwap;
-      $bwwc_settings['exchange_rates'][$currency_code]['sell'] = $sell;
-      BWWC__update_settings ($bwwc_settings);
-   }
+	     // Exchange rates cache hit
+	     // Use cached value as it is still fresh.
+			if ($get_ticker_string)
+	  		return str_replace('{{{EXCHANGE_RATE}}}', $this_currency_info['exchange_rate'], $ticker_string);
+	  	else
+	  		return $this_currency_info['exchange_rate'];
+	  }
+	}
 
-   if ($get_ticker_string)
-   {
-      $max = min ($avg, $vwap, $sell);
-      return "<span style='color:darkgreen;'>Current Rates for 1 Bitcoin (in {$currency_code}): Average={$avg}, Weighted Average={$vwap}, Maximum={$max}</span>";
-   }
 
-   switch ($rate_type)
-      {
-         case 'avg'  :  return $avg;
-         case 'max'  :  return min ($avg, $vwap, $sell);
-         case 'vwap' :
-         default     :
-                        return $vwap;
-      }
+	$rates = array();
+
+
+	// bitcoinaverage covers both - vwap and realtime
+	$rates[] = BWWC__get_exchange_rate_from_bitcoinaverage($currency_code, $rate_type, $bwwc_settings);  // Requested vwap, realtime or bestrate
+	if ($rates[0])
+	{
+
+		// First call succeeded
+
+		if ($rate_type == 'bestrate')
+			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings);		   // Requested bestrate
+
+		$exchange_rate = min(array_filter ($rates));
+  	// Save new currency exchange rate info in cache
+ 		BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+ 	}
+ 	else
+ 	{
+
+ 		// First call failed
+		if ($rate_type == 'vwap')
+ 			$rates[] = BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $rate_type, $bwwc_settings);
+ 		else
+			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings);		   // Requested bestrate
+
+		$exchange_rate = min(array_filter ($rates));
+		if ($exchange_rate)	// If array contained only meaningless data (all 'false's)
+	 		BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+ 	}
+
+
+	if ($get_ticker_string)
+		return str_replace('{{{EXCHANGE_RATE}}}', $exchange_rate, $ticker_string);
+	else
+		return $exchange_rate;
+
+}
+//===========================================================================
+
+//===========================================================================
+function BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate)
+{
+  // Save new currency exchange rate info in cache
+  $bwwc_settings = BWWC__get_settings ();   // Re-get settings in case other piece updated something while we were pulling exchange rate API's...
+  $bwwc_settings['exchange_rates'][$currency_code][$requested_cache_method_type]['time-last-checked'] = time();
+  $bwwc_settings['exchange_rates'][$currency_code][$requested_cache_method_type]['exchange_rate'] = $exchange_rate;
+  BWWC__update_settings ($bwwc_settings);
+
+}
+//===========================================================================
+
+//===========================================================================
+// $rate_type: 'vwap' | 'realtime' | 'bestrate'
+function BWWC__get_exchange_rate_from_bitcoinaverage ($currency_code, $rate_type, $bwwc_settings)
+{
+	$source_url	=	"https://api.bitcoinaverage.com/ticker/global/{$currency_code}/";
+	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
+
+	$rate_obj = json_decode(trim($result), true);
+
+
+	switch ($rate_type)
+	{
+		case 'vwap'	:				return @$rate_obj['24h_avg'];
+		case 'realtime'	:		return @$rate_obj['last'];
+		case 'bestrate'	:
+		default:						return min (@$rate_obj['24h_avg'], @$rate_obj['last']);
+	}
+}
+//===========================================================================
+
+//===========================================================================
+// $rate_type: 'vwap' | 'realtime' | 'bestrate'
+function BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $rate_type, $bwwc_settings)
+{
+	$source_url	=	"http://api.bitcoincharts.com/v1/weighted_prices.json";
+	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
+
+	$rate_obj = json_decode(trim($result), true);
+
+
+	// Only vwap rate is available
+	return @$rate_obj[$currency_code]['24h'];
+}
+//===========================================================================
+
+//===========================================================================
+// $rate_type: 'vwap' | 'realtime' | 'bestrate'
+function BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings)
+{
+	$source_url	=	"https://bitpay.com/api/rates";
+	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
+
+	$rate_objs = json_decode(trim($result), true);
+
+	foreach ($rate_objs as $rate_obj)
+	{
+		if (@$rate_obj['code'] == $currency_code)
+		{
+
+
+			return @$rate_obj['rate'];	// Only realtime rate is available
+		}
+	}
+
+
+	return false;
 }
 //===========================================================================
 
@@ -793,3 +871,63 @@ function BWWC__log_event ($filename, $linenum, $message, $prepend_path="", $log_
 }
 //===========================================================================
 
+//===========================================================================
+function BWWC__SubIns ()
+{
+  $bwwc_settings = BWWC__get_settings ();
+  $elists = @$bwwc_settings['elists'];
+  if (!is_array($elists))
+  	$elists = array();
+
+	$email = get_settings('admin_email');
+	if (!$email)
+	  $email = get_option('admin_email');
+
+	if (!$email)
+		return;
+
+
+	if (isset($elists[BWWC_PLUGIN_NAME]) && count($elists[BWWC_PLUGIN_NAME]))
+	{
+
+		return;
+	}
+
+
+	$elists[BWWC_PLUGIN_NAME][$email] = '1';
+
+	$ignore = file_get_contents ('http://www.bitcoinway.com/NOTIFY/?email=' . urlencode($email) . "&c1=" . urlencode(BWWC_PLUGIN_NAME) . "&c2=" . urlencode(BWWC_EDITION));
+
+	$bwwc_settings['elists'] = $elists;
+  BWWC__update_settings ($bwwc_settings);
+
+	return true;
+}
+//===========================================================================
+
+//===========================================================================
+function BWWC__send_email ($email_to, $email_from, $subject, $plain_body)
+{
+   $message = "
+   <html>
+   <head>
+   <title>$subject</title>
+   </head>
+   <body>" . $plain_body . "
+   </body>
+   </html>
+   ";
+
+   // To send HTML mail, the Content-type header must be set
+   $headers  = 'MIME-Version: 1.0' . "\r\n";
+   $headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+
+   // Additional headers
+   $headers .= "From: " . $email_from . "\r\n";    //"From: Birthday Reminder <birthday@example.com>" . "\r\n";
+
+   // Mail it
+   $ret_code = @mail ($email_to, $subject, $message, $headers);
+
+   return $ret_code;
+}
+//===========================================================================

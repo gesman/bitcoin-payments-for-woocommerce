@@ -8,7 +8,7 @@ http://www.bitcoinway.com/
 // Global definitions
 if (!defined('BWWC_PLUGIN_NAME'))
   {
-  define('BWWC_VERSION',           '2.12');
+  define('BWWC_VERSION',           '3.02');
 
   //-----------------------------------------------
   define('BWWC_EDITION',           'Standard');    
@@ -43,7 +43,6 @@ if (defined('BWWC_MUST_LOAD_WP') && !defined('WP_USE_THEMES') && !defined('ABSPA
    require_once ($g_blog_dir . '/wp-admin/includes/admin.php');
    }
 //------------------------------------------
-
 
 
 // This loads the phpecc modules and selects best math library

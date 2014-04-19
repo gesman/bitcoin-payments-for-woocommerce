@@ -148,17 +148,21 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	    	//----------------------------------
 
 	    	//----------------------------------
-	    	// Validate currency
-	   		$currency_code            = get_woocommerce_currency();
-	   		$supported_currencies_arr = BWWC__get_settings ('supported_currencies_arr');
+	    	// NOTE: currenly this check is not performed.
+				//  		Do not limit support with present list of currencies. This was originally created because exchange rate APIs did not support many, but today
+				//			they do support many more currencies, hence this check is removed for now.
 
-		   	if ($currency_code != 'BTC' && !@in_array($currency_code, $supported_currencies_arr))
-		   	{
-			    $reason_message = __("Store currency is set to unsupported value", 'woocommerce') . "('{$currency_code}'). " . __("Valid currencies: ", 'woocommerce') . implode ($supported_currencies_arr, ", ");
-	    		if ($ret_reason_message !== NULL)
-	    			$ret_reason_message = $reason_message;
-			  	return false;
-		   	}
+	    	// Validate currency
+	   		// $currency_code            = get_woocommerce_currency();
+	   		// $supported_currencies_arr = BWWC__get_settings ('supported_currencies_arr');
+
+		   	// if ($currency_code != 'BTC' && !@in_array($currency_code, $supported_currencies_arr))
+		   	// {
+			  //  $reason_message = __("Store currency is set to unsupported value", 'woocommerce') . "('{$currency_code}'). " . __("Valid currencies: ", 'woocommerce') . implode ($supported_currencies_arr, ", ");
+	    	// 	if ($ret_reason_message !== NULL)
+	    	// 		$ret_reason_message = $reason_message;
+			  // return false;
+		   	// }
 
 	     	return true;
 	    	//----------------------------------
@@ -187,8 +191,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	   		else
 	   			$currency_code = $store_currency_code;
 
-				$currency_ticker = BWWC__get_exchange_rate_per_bitcoin ($currency_code, 'max', true);
-				$api_url = "https://mtgox.com/api/1/BTC{$currency_code}/ticker";
+				$currency_ticker = BWWC__get_exchange_rate_per_bitcoin ($currency_code, 'getfirst', 'bestrate', true);
 	    	//-----------------------------------
 
 	    	//-----------------------------------
@@ -283,7 +286,12 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 								'default' => "",
 								'css'     => $this->service_provider!='electrum-wallet'?'display:none;':'',
 								'disabled' => $this->service_provider!='electrum-wallet'?true:false,
-								'description' => $this->service_provider!='electrum-wallet'?__('Available when Bitcoin service provider is set to: <b>Your own Electrum wallet</b>.', 'woocommerce'):__('Launch <a href="http://electrum.org/" target="_blank">Electrum wallet</a> and get Master Public Key value from Preferences -> Import/Export -> Master Public Key -> Show.<br />Copy long number string and paste it in this field.', 'woocommerce'),
+								'description' => $this->service_provider!='electrum-wallet'?__('Available when Bitcoin service provider is set to: <b>Your own Electrum wallet</b>.', 'woocommerce'):__('1. Launch <a href="http://electrum.org/" target="_blank">Electrum wallet</a> and get Master Public Key value from:<br />Wallet -> Master Public Key, or:<br />older version of Electrum: Preferences -> Import/Export -> Master Public Key -> Show.<br />Copy long number string and paste it in this field.<br />
+									2. Change "gap limit" value to bigger value (to make sure youll see the total balance on your wallet):<br />
+									Click on "Console" tab and run this command: <tt>wallet.storage.put(\'gap_limit\',100)</tt>
+									<br />Then restart Electrum wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
+									<br />If your online store receives lots of orders in bitcoins - you might need to set gap limit to even bigger value.
+									', 'woocommerce'),
 							),
 
 				'bitcoin_addr_merchant' => array(
@@ -302,18 +310,22 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 								'description' => __( 'After a transaction is broadcast to the Bitcoin network, it may be included in a block that is published to the network. When that happens it is said that one <a href="https://en.bitcoin.it/wiki/Confirmation" target="_blank">confirmation has occurred</a> for the transaction. With each subsequent block that is found, the number of confirmations is increased by one. To protect against double spending, a transaction should not be considered as confirmed until a certain number of blocks confirm, or verify that transaction. <br />6 is considered very safe number of confirmations, although it takes longer to confirm.', 'woocommerce' ),
 								'default' => '6',
 							),
+
+
 				'exchange_rate_type' => array(
 								'title' => __('Exchange rate calculation type', 'woocommerce' ),
 								'type' => 'select',
 								'disabled' => $store_currency_code=='BTC'?true:false,
 								'options' => array(
-									'avg'  => __( 'Average', 'woocommerce' ),
 									'vwap' => __( 'Weighted Average', 'woocommerce' ),
-									'max'  => __( 'Maximum', 'woocommerce' ),
+									'realtime' => __( 'Real time', 'woocommerce' ),
+									'bestrate' => __( 'Most profitable', 'woocommerce' ),
 									),
 								'default' => 'vwap',
 								'description' => ($store_currency_code=='BTC'?__('<span style="color:red;"><b>Disabled</b>: Applies only for stores with non-bitcoin default currency.</span><br />', 'woocommerce'):'') .
-									__('<b>Average</b>: <a href="https://mtgox.com/" target="_blank">MtGox</a> 24 hour average exchange rate<br /><b>Weighted Average</b> (recommended): MtGox <a href="http://en.wikipedia.org/wiki/VWAP" target="_blank">Weighted average</a> rate<br /><b>Maximum</b>: maximum exchange rate of all indicators (least favorable for customer). Calculated as: MIN (Average, Weighted Average, Sell price)') . " (<a href='{$api_url}' target='_blank'><b>rates API</b></a>)" . '<br />' . $currency_ticker,
+									__('<b>Weighted Average</b> (recommended): <a href="http://en.wikipedia.org/wiki/Volume-weighted_average_price" target="_blank">weighted average</a> rates polled from a number of exchange services<br />
+										<b>Real time</b>: the most recent transaction rates polled from a number of exchange services.<br />
+										<b>Most profitable</b>: pick better exchange rate of all indicators (most favorable for merchant). Calculated as: MIN (Weighted Average, Real time)') . '<br />' . $currency_ticker,
 							),
 				'exchange_multiplier' => array(
 								'title' => __('Exchange rate multiplier', 'woocommerce' ),
@@ -371,7 +383,9 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	    	?>
 	    	<h3><?php _e('Bitcoin Payment', 'woocommerce'); ?></h3>
 	    	<p>
-	    		<?php _e('Allows bitcoin payments. <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank">Bitcoins</a> are peer-to-peer, decentralized digital currency that enables instant payments from anyone to anyone, anywhere in the world',
+	    		<?php _e('Allows to accept payments in bitcoin. <a href="https://en.bitcoin.it/wiki/Main_Page" target="_blank">Bitcoins</a> are peer-to-peer, decentralized digital currency that enables instant payments from anyone to anyone, anywhere in the world
+<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate BTC to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>or via Paypal to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">donate@bitcoinway.com</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:95%;">(All supporters will be acknowledged and listed within plugin repository)</span></p>
+	    			',
 	    				'woocommerce'); ?>
 	    	</p>
 	    	<?php
@@ -437,7 +451,8 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			//
 			// Calculate realtime bitcoin price (if exchange is necessary)
 
-			$exchange_rate = BWWC__get_exchange_rate_per_bitcoin (get_woocommerce_currency(), $this->exchange_rate_type);
+			$exchange_rate = BWWC__get_exchange_rate_per_bitcoin (get_woocommerce_currency(), 'getfirst', $this->exchange_rate_type);
+			/// $exchange_rate = BWWC__get_exchange_rate_per_bitcoin (get_woocommerce_currency(), $this->exchange_rate_retrieval_method, $this->exchange_rate_type);
 			if (!$exchange_rate)
 			{
 				$msg = 'ERROR: Cannot determine Bitcoin exchange rate. Possible issues: store server does not allow outgoing connections, exchange rate servers are blocking incoming connections or down. ' .
@@ -550,7 +565,6 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
      		);
 			//-----------------------------------
 
-      		///BWWC__log_event (__FILE__, __LINE__, "process_payment() called for order id = $order_id");
 
 			// The bitcoin gateway does not take payment immediately, but it does need to change the orders status to on-hold
 			// (so the store owner knows that bitcoin payment is pending).
@@ -560,12 +574,24 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			global $woocommerce;
 
 			//	Updating the order status:
+
 			// Mark as on-hold (we're awaiting for bitcoins payment to arrive)
 			$order->update_status('on-hold', __('Awaiting bitcoin payment to arrive', 'woocommerce'));
 
-			// Reduce stock levels
-			$order->reduce_order_stock();
+/*
+			///////////////////////////////////////
+			// timbowhite's suggestion:
+			// -----------------------
+			// Mark as pending (we're awaiting for bitcoins payment to arrive), not 'on-hold' since
+      // woocommerce does not automatically cancel expired on-hold orders. Woocommerce handles holding the stock
+      // for pending orders until order payment is complete.
+			$order->update_status('pending', __('Awaiting bitcoin payment to arrive', 'woocommerce'));
 
+			// Me: 'pending' does not trigger "Thank you" page and neither email sending. Not sure why.
+			//			Also - I think cancellation of unpaid orders needs to be initiated from cron job, as only we know when order needs to be cancelled,
+			//			by scanning "on-hold" orders through 'assigned_address_expires_in_mins' timeout check.
+			///////////////////////////////////////
+*/
 			// Remove cart
 			$woocommerce->cart->empty_cart();
 
@@ -573,11 +599,20 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			unset($_SESSION['order_awaiting_payment']);
 
 			// Return thankyou redirect
-			return array(
-				'result' 	=> 'success',
-				'redirect'	=> add_query_arg('key', $order->order_key, add_query_arg('order', $order_id, get_permalink(woocommerce_get_page_id('thanks'))))
-			);
-
+			if (version_compare (WOOCOMMERCE_VERSION, '2.1', '<'))
+			{
+				return array(
+					'result' 	=> 'success',
+					'redirect'	=> add_query_arg('key', $order->order_key, add_query_arg('order', $order_id, get_permalink(woocommerce_get_page_id('thanks'))))
+				);
+			}
+			else
+			{
+				return array(
+						'result' 	=> 'success',
+						'redirect'	=> add_query_arg('key', $order->order_key, add_query_arg('order', $order_id, $this->get_return_url( $order )))
+					);
+			}
 		}
 		//-------------------------------------------------------------------
 
@@ -600,7 +635,6 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			$order_total_in_btc   = get_post_meta($order->id, 'order_total_in_btc',   true); // set single to true to receive properly unserialized array
 			$bitcoins_address = get_post_meta($order->id, 'bitcoins_address', true); // set single to true to receive properly unserialized array
 
-      		///BWWC__log_event (__FILE__, __LINE__, "BWWC__thankyou_page() called for order id: {$order_id}. Bitcoin address: $bitcoins_address ({$order_total_in_btc})");
 
 			$instructions = $this->instructions;
 			$instructions = str_replace ('{{{BITCOINS_AMOUNT}}}',  $order_total_in_btc, $instructions);
@@ -630,14 +664,13 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		function BWWC__email_instructions ($order, $sent_to_admin)
 		{
 	    	if ($sent_to_admin) return;
-	    	if ($order->status !== 'on-hold') return;
+	    	if (!in_array($order->status, array('pending', 'on-hold'), true)) return;
 	    	if ($order->payment_method !== 'bitcoin') return;
 
 	    	// Assemble payment instructions for email
 			$order_total_in_btc   = get_post_meta($order->id, 'order_total_in_btc',   true); // set single to true to receive properly unserialized array
 			$bitcoins_address = get_post_meta($order->id, 'bitcoins_address', true); // set single to true to receive properly unserialized array
 
-      		///BWWC__log_event (__FILE__, __LINE__, "BWWC__email_instructions() called for order id={$order->id}. Bitcoin address: $bitcoins_address ({$order_total_in_btc})");
 
 			$instructions = $this->instructions;
 			$instructions = str_replace ('{{{BITCOINS_AMOUNT}}}',  $order_total_in_btc, 	$instructions);
@@ -690,7 +723,6 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				}
 
 				$confirmations = @$_GET['confirmations'];
-
 
 
 				if ($confirmations >= $this->confirmations)
@@ -848,6 +880,7 @@ function BWWC__process_payment_completed_for_order ($order_id, $bitcoins_paid=fa
 		// Instantiate order object.
 		$order = new WC_Order($order_id);
 		$order->add_order_note( __('Order paid in full', 'woocommerce') );
+
 	  $order->payment_complete();
 	}
 }

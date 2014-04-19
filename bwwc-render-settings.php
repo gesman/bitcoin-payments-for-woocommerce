@@ -73,7 +73,6 @@ function BWWC__render_general_settings_page_html ()
         <table class="form-table">
 
 
-
             <tr valign="top">
                 <th scope="row">Delete all plugin-specific settings, database tables and data on uninstall:</th>
                 <td><input type="hidden" name="delete_db_tables_on_uninstall" value="0" /><input type="checkbox" name="delete_db_tables_on_uninstall" value="1" <?php if ($bwwc_settings['delete_db_tables_on_uninstall']) echo 'checked="checked"'; ?> /></td>

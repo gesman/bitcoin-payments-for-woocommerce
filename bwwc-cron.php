@@ -5,8 +5,6 @@ http://www.bitcoinway.com/
 */
 
 
-
-
 // Include everything
 define('BWWC_MUST_LOAD_WP',  '1');
 include (dirname(__FILE__) . '/bwwc-include-all.php');
@@ -22,9 +20,6 @@ function BWWC_cron_job_worker ($hardcron=false)
 {
   global $wpdb;
 
-  //////
-  //////BWWC__log_event (__FILE__, __LINE__, "Cron job: entered with hardcron='" . $hardcron . "'");
-  //////
 
   $bwwc_settings = BWWC__get_settings ();
 
@@ -47,7 +42,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 
   // NULL == not found
   // Retrieve:
-  //     'assigned'   - unexpired, with old balances
+  //     'assigned'   - unexpired, with old balances (due for revalidation. Fresh balances and still 'assigned' means no [full] payment received yet)
   //     'revalidate' - all
   //        order results by most recently assigned
   $query =
@@ -59,18 +54,28 @@ function BWWC_cron_job_worker ($hardcron=false)
         (`status`='revalidate')
       )
       AND (('$current_time' - `received_funds_checked_at`) > '$funds_received_value_expires_in_secs')
-      ORDER BY `assigned_at` DESC;"; // Try to use lower indexes first
+      ORDER BY `received_funds_checked_at` ASC;"; // Check the ones that haven't been checked for longest time
   $rows_for_balance_check = $wpdb->get_results ($query, ARRAY_A);
 
   if (is_array($rows_for_balance_check))
+  	$count_rows_for_balance_check = count($rows_for_balance_check);
+  else
+  	$count_rows_for_balance_check = 0;
+
+
+  if (is_array($rows_for_balance_check))
   {
+  	$ran_cycles = 0;
   	foreach ($rows_for_balance_check as $row_for_balance_check)
   	{
+  		$ran_cycles++;	// To limit number of cycles per soft cron job.
+
 		  // Prepare 'address_meta' for use.
 		  $address_meta    = BWWC_unserialize_address_meta (@$row_for_balance_check['address_meta']);
 		  $last_order_info = @$address_meta['orders'][0];
 
 		  $row_id       = $row_for_balance_check['id'];
+
 
 		  // Retrieve current balance at address.
 		  $balance_info_array = BWWC__getreceivedbyaddress_info ($row_for_balance_check['btc_address'], $confirmations_required, $bwwc_settings['blockchain_api_timeout_secs']);
@@ -97,6 +102,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 
         if ($balance_info_array['balance'] > 0)
         {
+
           if ($row_for_balance_check['status'] == 'revalidate')
           {
             // Address with suddenly appeared balance. Check if that is matching to previously-placed [likely expired] order
@@ -129,6 +135,10 @@ function BWWC_cron_job_worker ($hardcron=false)
           {
             BWWC__log_event (__FILE__, __LINE__, "Cron job: NOTE: balance at address: '{$row_for_balance_check['btc_address']}' (BTC '{$balance_info_array['balance']}') is not yet sufficient to complete it's order (order ID = '{$last_order_info['order_id']}'). Total required: '{$last_order_info['order_total']}'. Will wait for more funds to arrive...");
           }
+        }
+        else
+        {
+
         }
 
         // Note: to be perfectly safe against late-paid orders, we need to:
@@ -185,17 +195,25 @@ function BWWC_cron_job_worker ($hardcron=false)
 	        $ret_code = $wpdb->query ($query);
 	        BWWC__log_event (__FILE__, __LINE__, "Cron job: SUCCESS: Order ID '{$last_order_info['order_id']}' successfully completed.");
 
-	        //	Return here to avoid overloading too many processing needs to one random visitor.
-	        //	Then it means no more than one order can be processed per 2.5 minutes (or whatever soft cron schedule is).
-	        //	Hard cron is immune to this limitation.
-	        if (!$hardcron)
-	        	return;
+
+// This is not needed here. Let it process as many orders as are paid for in the same loop.
+// Maybe to be moved there --> //..// (to avoid soft-cron checking of balance of hundreds of addresses in a same loop)
+//
+// 	        //	Return here to avoid overloading too many processing needs to one random visitor.
+// 	        //	Then it means no more than one order can be processed per 2.5 minutes (or whatever soft cron schedule is).
+// 	        //	Hard cron is immune to this limitation.
+// 	        if (!$hardcron && $ran_cycles >= $bwwc_settings['soft_cron_max_loops_per_run'])
+// 	        {
+
+// 	        	return;
+// 	        }
 		    }
 		  }
 		  else
 		  {
 		    BWWC__log_event (__FILE__, __LINE__, "Cron job: Warning: Cannot retrieve balance for address: '{$row_for_balance_check['btc_address']}: " . $balance_info_array['message']);
 		  }
+		  //..//
 		}
 	}
 
@@ -217,11 +235,10 @@ function BWWC_cron_job_worker ($hardcron=false)
       $origin_id = 'electrum.mpk.' . md5($electrum_mpk);
 
       $current_time = time();
-      $funds_received_value_expires_in_secs = $bwwc_settings['funds_received_value_expires_in_mins'] * 60;
       $assigned_address_expires_in_secs     = $bwwc_settings['assigned_address_expires_in_mins'] * 60;
 
       if ($bwwc_settings['reuse_expired_addresses'])
-        $reuse_expired_addresses_query_part = "OR (`status`='assigned' AND `total_received_funds`='0' AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs'))";
+        $reuse_expired_addresses_query_part = "OR (`status`='assigned' AND (('$current_time' - `assigned_at`) > '$assigned_address_expires_in_secs'))";
       else
         $reuse_expired_addresses_query_part = "";
 
@@ -237,10 +254,10 @@ function BWWC_cron_job_worker ($hardcron=false)
         "SELECT COUNT(*) as `total_unused_addresses` FROM `$btc_addresses_table_name`
            WHERE `origin_id`='$origin_id'
            AND `total_received_funds`='0'
-           AND (('$current_time' - `received_funds_checked_at`) < '$funds_received_value_expires_in_secs')
            AND (`status`='unused' $reuse_expired_addresses_query_part)
            ";
       $total_unused_addresses = $wpdb->get_var ($query);
+
 
       if ($total_unused_addresses < $bwwc_settings['max_unused_addresses_buffer'])
       {
