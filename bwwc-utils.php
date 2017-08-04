@@ -674,18 +674,17 @@ function BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_meth
 // $rate_type: 'vwap' | 'realtime' | 'bestrate'
 function BWWC__get_exchange_rate_from_bitcoinaverage ($currency_code, $rate_type, $bwwc_settings)
 {
-	$source_url	=	"https://api.bitcoinaverage.com/ticker/global/{$currency_code}/";
+	$source_url	=	"https://blockchain.info/ticker";
 	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
 
-	$rate_obj = json_decode(trim($result), true);
-
+	$rate_obj = json_decode(trim($result), true)[$currency_code];
 
 	switch ($rate_type)
 	{
-		case 'vwap'	:				return @$rate_obj['24h_avg'];
+		case 'vwap'	:				return @$rate_obj['15m'];
 		case 'realtime'	:		return @$rate_obj['last'];
 		case 'bestrate'	:
-		default:						return min (@$rate_obj['24h_avg'], @$rate_obj['last']);
+		default:						return min (@$rate_obj['15m'], @$rate_obj['last']);
 	}
 }
 //===========================================================================
