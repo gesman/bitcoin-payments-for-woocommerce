@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 
@@ -21,15 +21,15 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 
 	//=======================================================================
 	/**
-	 * Bitcoin Payment Gateway
+	 * Bitcoin Cash Payment Gateway
 	 *
-	 * Provides a Bitcoin Payment Gateway
+	 * Provides a Bitcoin Cash Payment Gateway
 	 *
 	 * @class 		BWWC_Bitcoin
 	 * @extends		WC_Payment_Gateway
 	 * @version
 	 * @package
-	 * @author 		BitcoinWay
+	 * @author 		mboyd1
 	 */
 	class BWWC_Bitcoin extends WC_Payment_Gateway
 	{
@@ -356,7 +356,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	    	<h3><?php _e('Bitcoin Cash Payment', 'woocommerce'); ?></h3>
 	    	<p>
 	    		<?php _e('Allows to accept payments in bitcoin cash. <a href="https://bitcoincash.org" target="_blank">Bitcoin Cash</a> is peer-to-peer, decentralized digital currency that enables instant payments from anyone to anyone, anywhere in the world
-<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate BTC to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>or via Paypal to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">donate@bitcoinway.com</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:95%;">(All supporters will be acknowledged and listed within plugin repository)</span></p>
+<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate Bitcoin Cash to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj</span></p>
 	    			',
 	    				'woocommerce'); ?>
 	    	</p>

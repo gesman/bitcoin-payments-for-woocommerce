@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 // Include everything
@@ -80,7 +80,7 @@ function BWWC__GetPluginNameVersionEdition($please_donate = true)
 
   if ($please_donate)
   {
-    $return_data .= '<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate BTC to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>or via Paypal to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">donate@bitcoinway.com</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:95%;">All supporters will be acknowledged and listed within plugin repository. Please note that if you ever donated - you may use your donation as a credit toward <a href="' . BWWC__GetProUrl() . '"><b>Pro version</b></a>.</span></p>';
+    $return_data .= '<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate Bitcoin Cash to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>';
   }
 
   return $return_data;
@@ -88,7 +88,7 @@ function BWWC__GetPluginNameVersionEdition($please_donate = true)
 //===========================================================================
 
 //===========================================================================
-function BWWC__GetProUrl() { return 'http://bitcoinway.com/products/'; }
+function BWWC__GetProUrl() { return 'http://google.com'; }
 function BWWC__GetProLabel()
 {
    return '<span style="background-color:#FF4;color:#F44;border:1px solid #F44;padding:2px 6px;font-family:\'Open Sans\',sans-serif;font-size:14px;border-radius:6px;"><a href="' . BWWC__GetProUrl() . '">PRO Only</a></span>';

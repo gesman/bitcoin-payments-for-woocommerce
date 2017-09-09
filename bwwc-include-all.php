@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 //---------------------------------------------------------------------------
@@ -16,7 +16,7 @@ if (!defined('BWWC_PLUGIN_NAME'))
 
   //-----------------------------------------------
   define('BWWC_SETTINGS_NAME',     'BWWC-Settings');
-  define('BWWC_PLUGIN_NAME',       'Bitcoin Payments for WooCommerce');   
+  define('BWWC_PLUGIN_NAME',       'Bitcoin Cash Payments for WooCommerce');   
 
 
   // i18n plugin domain for language files

@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 // Include everything
@@ -56,14 +56,14 @@ HHHH;
   {
     $gateway_status_message =
     '<p style="border:1px solid #DDD;padding:5px 10px;font-weight:bold;color:#EE0000;background-color:#FFFFAA;">' .
-    "Bitcoin Payment Gateway is NOT operational (try to re-enter and save settings): " . $gateway_status_message .
+    "Bitcoin Cash Payment Gateway is NOT operational (try to re-enter and save settings): " . $gateway_status_message .
     '</p>';
   }
   else
   {
     $gateway_status_message =
     '<p style="border:1px solid #DDD;padding:5px 10px;font-weight:bold;color:#004400;background-color:#CCFFCC;">' .
-    "Bitcoin Payment Gateway is operational" .
+    "Bitcoin Cash Payment Gateway is operational" .
     '</p>';
   }
 
@@ -147,9 +147,9 @@ function BWWC__render_general_settings_page_html ()
             <p class="description">
               <ol class="description">
                 <li>
-                  Launch Electrum wallet and get Master Public Key value from:
+                  Launch Electron Cash wallet and get Master Public Key value from:
                   Wallet -> Master Public Key, or:
-                  <br />older version of Electrum: Preferences -> Import/Export -> Master Public Key -> Show.
+                  <br />older version of Electron Cash: Preferences -> Import/Export -> Master Public Key -> Show.
                 </li>
                 <li>
                   Copy long number string and paste it in this field.
@@ -159,7 +159,7 @@ function BWWC__render_general_settings_page_html ()
                   <br />Click on "Console" tab and run this command: <tt>wallet.storage.put('gap_limit',100)</tt>
                 </li>
                 <li>
-                  Restart Electrum wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
+                  Restart Electron Cash wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
                   <br />If your online store receives lots of orders in bitcoins - you might need to set gap limit to even bigger value.
                 </li>
               </ol>
@@ -172,7 +172,7 @@ function BWWC__render_general_settings_page_html ()
           <td>
             <input type="text" name="confs_num" value="<?php echo $bwwc_settings['confs_num']; ?>" size="4" />
             <p class="description">
-              After a transaction is broadcast to the Bitcoin network, it may be included in a block that is published
+              After a transaction is broadcast to the Bitcoin Cash network, it may be included in a block that is published
               to the network. When that happens it is said that one <a href="https://en.bitcoin.it/wiki/Confirmation"><b>confirmation</b></a> has occurred for the transaction.
               With each subsequent block that is found, the number of confirmations is increased by one. To protect against double spending, a transaction should not be considered as confirmed until a certain number of blocks confirm, or verify that transaction.
               6 is considered very safe number of confirmations, although it takes longer to confirm.
@@ -181,7 +181,7 @@ function BWWC__render_general_settings_page_html ()
         </tr>
 
         <tr valign="top">
-          <th scope="row">Bitcoin Exchange rate calculation type:</th>
+          <th scope="row">Bitcoin Cash Exchange rate calculation type:</th>
           <td>
             <select name="exchange_rate_type" class="select ">
               <option <?php if ($bwwc_settings['exchange_rate_type'] == 'vwap') echo 'selected="selected"'; ?> value="vwap">Weighted Average</option>
@@ -250,7 +250,7 @@ function BWWC__render_general_settings_page_html ()
               </select>
               <p class="description">
                 <?php if ($bwwc_settings['enable_soft_cron_job'] != '1') echo '<p style="background-color:#FFC;color:#2A2;"><b>NOTE</b>: Hard Cron job is enabled: make sure to follow instructions below to enable hard cron job at your hosting panel.</p>'; ?>
-                Cron job will take care of all regular bitcoin payment processing tasks, like checking if payments are made and automatically completing the orders.<br />
+                Cron job will take care of all regular bitcoin cash payment processing tasks, like checking if payments are made and automatically completing the orders.<br />
                 <b>Soft Cron</b>: - Wordpress-driven (runs on behalf of a random site visitor).
                 <br />
                 <b>Hard Cron</b>: - Cron job driven by the website hosting system/server (usually via CPanel). <br />
@@ -286,7 +286,7 @@ function BWWC__render_advanced_settings_page_html ()
 
 <p style="text-align:center;"><?php echo BWWC__GetProLabel(); ?></p>
 <p><h3>Advanced Settings section gives you many more options to configure and optimize all aspects and functionality of your bitcoin store.</h3>
-  Please note that if you are among many who made a donation toward the development of BitcoinWay software - you will receive an equivalent credit toward the
+  Please note that the pro version of this plugin is only available to support legacy bitcoin and not bitcoin cash.  Do not purchase pro at this time if you intend to accept bitcoin cash payments.
   <a href="<?php echo BWWC__GetProUrl(); ?>"><b>Pro version</b></a>.
 </p>
 <h3 style="text-align:center;color:#090;">Get the <a href="<?php echo BWWC__GetProUrl(); ?>"><b>PRO version</b></a></h3>

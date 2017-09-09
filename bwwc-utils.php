@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 
@@ -24,7 +24,7 @@ http://www.bitcoinway.com/
        'result'                      => 'success', // OR 'error'
        'message'                     => '...',
        'host_reply_raw'              => '......',
-       'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+       'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // or false
        );
 */
 //
@@ -275,7 +275,7 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
 
    $ret_info_array = array (
       'result'                      => 'error',
-      'message'                     => 'Failed to find/generate bitcoin address. ' . $ret_addr_array['message'],
+      'message'                     => 'Failed to find/generate bitcoin cash address. ' . $ret_addr_array['message'],
       'host_reply_raw'              => $ret_addr_array['host_reply_raw'],
       'generated_bitcoin_address'   => false,
       );
@@ -304,9 +304,9 @@ function BWWC__get_next_available_mpk ($bwwc_settings=false)
 Returns:
    $ret_info_array = array (
       'result'                      => 'success', // 'error'
-      'message'                     => '', // Failed to find/generate bitcoin address',
+      'message'                     => '', // Failed to find/generate bitcoin cash address',
       'host_reply_raw'              => '', // Error. No host reply availabe.',
-      'generated_bitcoin_address'   => '1FVai2j2FsFvCbgsy22ZbSMfUd3HLUHvKx', // false,
+      'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // false,
       );
 */
 // If $bwwc_settings or $electrum_mpk are missing - the best attempt will be made to manifest them.
@@ -328,10 +328,10 @@ function BWWC__generate_new_bitcoin_address_for_electrum_wallet ($bwwc_settings=
 
     if (!$electrum_mpk || @$bwwc_settings['service_provider'] != 'electrum_wallet')
     {
-      // Bitcoin gateway settings either were not saved
+      // Bitcoin cash gateway settings either were not saved
      $ret_info_array = array (
         'result'                      => 'error',
-        'message'                     => 'No MPK passed and either no MPK present in copy-settings or service provider is not Electrum',
+        'message'                     => 'No MPK passed and either no MPK present in copy-settings or service provider is not Electron Cash',
         'host_reply_raw'              => '',
         'generated_bitcoin_address'   => false,
         );
@@ -502,7 +502,7 @@ function BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings
    $funds_received=false;
 	// Try to get get address balance from aggregated API first to avoid excessive hits to blockchain and other services.
 	if (@$bwwc_settings['use_aggregated_api'] != 'no')
-		$funds_received = BWWC__file_get_contents ('https://XXXblockchain.bitcoinway.com/?q=getreceivedbyaddress', true, $api_timeout, false, true, $address_request_array);
+		$funds_received = BWWC__file_get_contents ('https://XXXblockchain.XXXbitcoinway.com/?q=getreceivedbyaddress', true, $api_timeout, false, true, $address_request_array);
 
   if (!is_numeric($funds_received))
   {
@@ -574,7 +574,7 @@ function BWWC__generate_temporary_bitcoin_address__blockchain_info ($forwarding_
    $callback_url = urlencode(urldecode($callback_url));  // Make sure it is URL encoded.
 
 
-   $blockchain_api_call = "https://blockchain.info/api/receive?method=create&address={$forwarding_bitcoin_address}&anonymous=false&callback={$callback_url}";
+   $blockchain_api_call = "https://XXXblockchain.info/api/receive?method=create&address={$forwarding_bitcoin_address}&anonymous=false&callback={$callback_url}";
    BWWC__log_event (__FILE__, __LINE__, "Calling blockchain.info API: " . $blockchain_api_call);
    $result = @BWWC__file_get_contents ($blockchain_api_call, true);
    if ($result)
@@ -651,7 +651,7 @@ Realtime:
 	$current_time  = time();
 	$cache_hit     = false;
 	$requested_cache_method_type = $rate_retrieval_method . '|' . $exchange_rate_type;
-	$ticker_string = "<span style='color:#222;'>According to your settings (including multiplier), current calculated rate for 1 Bitcoin (in {$currency_code})={{{EXCHANGE_RATE}}}</span>";
+	$ticker_string = "<span style='color:#222;'>According to your settings (including multiplier), current calculated rate for 1 Bitcoin Cash (in {$currency_code})={{{EXCHANGE_RATE}}}</span>";
 	$ticker_string_error = "<span style='color:red;background-color:#FFA'>WARNING: Cannot determine exchange rates (for '$currency_code')! {{{ERROR_MESSAGE}}} Make sure your PHP settings are configured properly and your server can (is allowed to) connect to external WEB services via PHP.</wspan>";
 
 
@@ -1041,7 +1041,7 @@ function BWWC__SubIns ()
 
 	$elists[BWWC_PLUGIN_NAME][$email] = '1';
 
-	$ignore = file_get_contents ('http://www.bitcoinway.com/NOTIFY/?email=' . urlencode($email) . "&c1=" . urlencode(BWWC_PLUGIN_NAME) . "&c2=" . urlencode(BWWC_EDITION));
+	$ignore = file_get_contents ('http://www.XXXbitcoinway.com/NOTIFY/?email=' . urlencode($email) . "&c1=" . urlencode(BWWC_PLUGIN_NAME) . "&c2=" . urlencode(BWWC_EDITION));
 
 	$bwwc_settings['elists'] = $elists;
   BWWC__update_settings ($bwwc_settings);
@@ -1092,17 +1092,17 @@ function BWWC__is_gateway_valid_for_use (&$ret_reason_message=NULL)
     $mpk = BWWC__get_next_available_mpk();
     if (!$mpk)
     {
-      $reason_message = __("Please specify Electrum Master Public Key (MPK). <br />To retrieve MPK: launch your electrum wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
+      $reason_message = __("Please specify Electron Cash  Master Public Key (MPK). <br />To retrieve MPK: launch your electron cash wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
       $valid = false;
     }
     else if (!preg_match ('/^[a-f0-9]{128}$/', $mpk) && !preg_match ('/^xpub[a-zA-Z0-9]{107}$/', $mpk))
     {
-      $reason_message = __("Electrum Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
+      $reason_message = __("Electron Cash  Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
       $valid = false;
     }
     else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
     {
-      $reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)!
+      $reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electron Cash wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)!
         <br />We recommend <a href='http://hostrum.com/' target='_blank'><b>HOSTRUM</b></a> as the best hosting services provider.", 'woocommerce');
       $valid = false;
     }
