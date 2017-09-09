@@ -65,7 +65,7 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 == Changelog ==
 
 = 3.03 =
-* Forked original bitcoin payment plugin, modified for Bitcoin Cash
+* Forked original bitcoin payment plugin, modified for Bitcoin Cash.  Supports Electron Cash wallet's Master Public Key
 
 = 3.02 =
 * Upgraded to support WooCommerce 2.1+
