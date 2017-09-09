@@ -264,8 +264,8 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 
 ' . __('Please note:', 'woocommerce') . '
 <ol class="bpit-instructions">
-    <li>' . __('We ONLY accept Bitcoin Cash! Bitcoin (legacy/core/segwit) payments will not process and the money will be lost forever!', 'woocommerce') . '</li>^M
-    <li>' . __('We are not responsible for lost funds if you send BTC instead of BCH', 'woocommerce') . '</li>^M
+    <li>' . __('We ONLY accept Bitcoin Cash! Bitcoin (legacy/core/segwit) payments will not process and the money will be lost forever!', 'woocommerce') . '</li>
+    <li>' . __('We are not responsible for lost funds if you send BTC instead of BCH', 'woocommerce') . '</li>
     <li>' . __('You must make a payment within 1 hour, or your order may be cancelled', 'woocommerce') . '</li>
     <li>' . __('As soon as your payment is received in full you will receive email confirmation with order delivery details.', 'woocommerce') . '</li>
     <li>{{{EXTRA_INSTRUCTIONS}}}</li>
