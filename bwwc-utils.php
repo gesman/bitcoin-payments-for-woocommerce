@@ -120,8 +120,8 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
       $blockchains_api_failures = 0;
       foreach ($addresses_to_verify_for_zero_balances_rows as $address_to_verify_for_zero_balance_row)
       {
-         // http://blockexplorer.com/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2
-         // http://blockchain.info/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2 [?confirmations=6]
+         // http://blockexplorer.com/q/getreceivedbyaddress/18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj
+         // http://blockchain.info/q/getreceivedbyaddress/18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj [?confirmations=6]
          //
          $address_to_verify_for_zero_balance = $address_to_verify_for_zero_balance_row['btc_address'];
 
@@ -478,9 +478,9 @@ $ret_info_array = array (
 function BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings=false)
 {
 	// https://blockchain.bitcoinway.com/?q=getreceivedbyaddress
-	//    with POST: btc_address=12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R&required_confirmations=6&api_timeout=20
-  // https://blockexplorer.com/api/addr/1KWd23GZ4BmTMo9zcsUZXpWP4M8hmxZwRU/totalReceived
-  // https://blockchain.info/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2 [?confirmations=6]
+	//    with POST: btc_address=18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj&required_confirmations=6&api_timeout=20
+  // https://blockexplorer.com/api/addr/18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj/totalReceived
+  // https://blockchain.info/q/getreceivedbyaddress/18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj [?confirmations=6]
 	if (!$bwwc_settings)
   	$bwwc_settings = BWWC__get_settings ();
 
@@ -562,7 +562,7 @@ function BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings
        'result'                      => 'success', // OR 'error'
        'message'                     => '...',
        'host_reply_raw'              => '......',
-       'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+       'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // or false
        );
 */
 //

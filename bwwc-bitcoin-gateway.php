@@ -113,7 +113,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		    		$reason_message = __("Your personal bitcoin address is not selected", 'woocommerce');
 		    		$valid = false;
 	    		}
-	    		else if ($this->bitcoin_addr_merchant == '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2')
+	    		else if ($this->bitcoin_addr_merchant == '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj')
 	    		{
 		    		$reason_message = __("Your personal bitcoin address is invalid. The address specified is Bitcoinway.com's donation address :)", 'woocommerce');
 		    		$valid = false;
@@ -302,7 +302,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 								'type' => 'text',
 								'css'     => $this->service_provider!='blockchain_info'?'display:none;':'',
 								'disabled' => $this->service_provider!='blockchain_info'?true:false,
-								'description' => $this->service_provider!='blockchain_info'?__('Available when Bitcoin service provider is set to: <b>Blockchain.info</b> (at BitcoinWay plugin settings page)', 'woocommerce'):__( 'Your own bitcoin address (such as: 1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2) - where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address by blockchain.info APIs.', 'woocommerce' ),
+								'description' => $this->service_provider!='blockchain_info'?__('Available when Bitcoin service provider is set to: <b>Blockchain.info</b> (at BitcoinWay plugin settings page)', 'woocommerce'):__( 'Your own bitcoin address (such as: 18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj) - where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address by blockchain.info APIs.', 'woocommerce' ),
 								'default' => '',
 							),
 
@@ -491,7 +491,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
                'result'                      => 'success', // OR 'error'
                'message'										 => '...',
                'host_reply_raw'              => '......',
-               'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+               'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // or false
                );
 				*/
 				$bitcoins_address = @$ret_info_array['generated_bitcoin_address'];
@@ -504,7 +504,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
                'result'                      => 'success', // OR 'error'
                'message'										 => '...',
                'host_reply_raw'              => '......',
-               'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
+               'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // or false
                );
 				*/
 				$ret_info_array = BWWC__get_bitcoin_address_for_payment__electrum (BWWC__get_next_available_mpk(), $order_info);
