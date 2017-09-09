@@ -130,8 +130,8 @@ function BWWC__render_general_settings_page_html ()
           <th scope="row">Bitcoin Service Provider:</th>
           <td>
             <select name="service_provider" class="select ">
-              <option <?php if ($bwwc_settings['service_provider'] == 'electrum_wallet') echo 'selected="selected"'; ?> value="electrum_wallet">Your own Electrum wallet</option>
-              <option <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') echo 'selected="selected"'; ?> value="blockchain_info">Blockchain.info API (deprecated - use Electrum instead)</option>
+              <option <?php if ($bwwc_settings['service_provider'] == 'electrum_wallet') echo 'selected="selected"'; ?> value="electrum_wallet">Your own Electron Cash wallet</option>
+              <option <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') echo 'selected="selected"'; ?> value="blockchain_info">Blockchain.info API (DOES NOT WORK FOR BITCOIN CASH! use Electrum instead)</option>
             </select>
             <p class="description">
               Please select your Bitcoin service provider and press [Save changes]. Then fill-in necessary details and press [Save changes] again.
@@ -222,10 +222,10 @@ function BWWC__render_general_settings_page_html ()
               <p class="description">
                 <b>No</b> (default, recommended) - will allow to recycle bitcoin addresses that been generated for each placed order but never received any payments. The drawback of this approach is that potential snoop can generate many fake (never paid for) orders to discover sequence of bitcoin addresses that belongs to the wallet of this store and then track down sales through blockchain analysis. The advantage of this option is that it very efficiently reuses empty (zero-balance) bitcoin addresses within the wallet, allowing only 1 sale per address without growing the wallet size (Electrum "gap" value).
                 <br />
-                <b>Yes</b> - this will guarantee to generate unique bitcoin address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the Electrum wallet much sooner).
+                <b>Yes</b> - ONLY AVAILABLE in legacy bitcoin plugin, not available for bitcoin cash fork at this time. This will guarantee to generate unique bitcoin address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the Electrum wallet much sooner).
                 <br />It is recommended to regenerate new wallet after number of used bitcoin addresses reaches 1000. Wallets with very high gap limits (>1000) are very slow to sync with blockchain and they put an extra load on the network. <br />
                 Extreme privacy mode offers the best anonymity and privacy to the store albeit with the drawbacks of potentially flooding your Electrum wallet with expired and zero-balance addresses. Hence, for vast majority of cases (where you just need a secure way to operate bitcoin based store) it is suggested to set this option to 'No').<br />
-                <b>Note</b>: It is possible to change this option at any time and it will take effect immediately.
+                <b>Note</b>: PRO version only available for original bitcoin payment plugin. not available for bitcoin cash.
               </p>
             </td>
         </tr>
