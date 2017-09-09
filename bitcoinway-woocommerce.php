@@ -117,8 +117,8 @@ function BWWC_create_menu()
     // create new top-level menu
     // http://www.fileformat.info/info/unicode/char/e3f/index.htm
     add_menu_page (
-        __('Woo Bitcoin', BWWC_I18N_DOMAIN),                    // Page title
-        __('Bitcoin', BWWC_I18N_DOMAIN),                        // Menu Title - lower corner of admin menu
+        __('Woo Bitcoin Cash', BWWC_I18N_DOMAIN),                    // Page title
+        __('Bitcoin Cash', BWWC_I18N_DOMAIN),                        // Menu Title - lower corner of admin menu
         'administrator',                                        // Capability
         'bwwc-settings',                                        // Handle - First submenu's handle must be equal to parent's handle to avoid duplicate menu entry.
         'BWWC__render_general_settings_page',                   // Function
