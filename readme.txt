@@ -24,8 +24,7 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 * Add bitcoin cash  payments option to your existing online store with alternative main currency.
 * Flexible exchange rate calculations fully managed via administrative settings.
 * Zero fees and no commissions for bitcoin cash payments processing from any third party.
-* Support 16 different currencies.
-* Set main currency of your store in any of 16 currencies or bitcoin cash.
+* Set main currency of your store to USD or bitcoin cash.
 * Automatic conversion to bitcoin cash via realtime exchange rate feed and calculations.
 * Ability to set exchange rate calculation multiplier to compensate for any possible losses due to bank conversions and funds transfer fees.
 
