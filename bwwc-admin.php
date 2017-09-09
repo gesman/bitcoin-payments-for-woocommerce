@@ -12,6 +12,10 @@ include (dirname(__FILE__) . '/bwwc-include-all.php');
 
 global $g_BWWC__plugin_directory_url;
 $g_BWWC__plugin_directory_url = plugins_url ('', __FILE__);
+
+global $g_BWWC__cron_script_url;
+$g_BWWC__cron_script_url = $g_BWWC__plugin_directory_url . '/bwwc-cron.php';
+
 //===========================================================================
 
 //===========================================================================
@@ -21,31 +25,42 @@ $g_BWWC__config_defaults = array (
 
    // ------- Hidden constants
 // 'supported_currencies_arr'             =>  array ('USD', 'AUD', 'CAD', 'CHF', 'CNY', 'DKK', 'EUR', 'GBP', 'HKD', 'JPY', 'NZD', 'PLN', 'RUB', 'SEK', 'SGD', 'THB'), // Not used right now.
-   'database_schema_version'              =>  1.2,
-   'assigned_address_expires_in_mins'     =>  4*60,   // 6 hours to pay for order and receive necessary number of confirmations.
-   'funds_received_value_expires_in_mins' =>  '10',		// 'received_funds_checked_at' is fresh (considered to be a valid value) if it was last checked within 'funds_received_value_expires_in_mins' minutes.
+   'database_schema_version'              =>  1.4,
+   'assigned_address_expires_in_mins'     =>  4*60,   // 4 hours to pay for order and receive necessary number of confirmations.
+   'funds_received_value_expires_in_mins' =>  '5',		// 'received_funds_checked_at' is fresh (considered to be a valid value) if it was last checked within 'funds_received_value_expires_in_mins' minutes.
    'starting_index_for_new_btc_addresses' =>  '2',    // Generate new addresses for the wallet starting from this index.
    'max_blockchains_api_failures'         =>  '3',    // Return error after this number of sequential failed attempts to retrieve blockchain data.
    'max_unusable_generated_addresses'     =>  '20',   // Return error after this number of unusable (non-empty) bitcoin addresses were sequentially generated
    'blockchain_api_timeout_secs'          =>  '20',   // Connection and request timeouts for curl operations dealing with blockchain requests.
    'exchange_rate_api_timeout_secs'       =>  '10',   // Connection and request timeouts for curl operations dealing with exchange rate API requests.
    'soft_cron_job_schedule_name'          =>  'minutes_1',   // WP cron job frequency
-   'delete_expired_unpaid_orders'         =>  true,   // Automatically delete expired, unpaid orders from WooCommerce->Orders database
-   'reuse_expired_addresses'              =>  true,   // True - may reduce anonymouty of store customers (someone may click/generate bunch of fake orders to list many addresses that in a future will be used by real customers).
+   'delete_expired_unpaid_orders'         =>  '1',   // Automatically delete expired, unpaid orders from WooCommerce->Orders database
+   'reuse_expired_addresses'              =>  '1',   // True - may reduce anonymouty of store customers (someone may click/generate bunch of fake orders to list many addresses that in a future will be used by real customers).
                                                       // False - better anonymouty but may leave many addresses in wallet unused (and hence will require very high 'gap limit') due to many unpaid order clicks.
                                                       //        In this case it is recommended to regenerate new wallet after 'gap limit' reaches 1000.
    'max_unused_addresses_buffer'          =>  10,     // Do not pre-generate more than these number of unused addresses. Pregeneration is done only by hard cron job or manually at plugin settings.
    'cache_exchange_rates_for_minutes'			=>	10,			// Cache exchange rate for that number of minutes without re-calling exchange rate API's.
 // 'soft_cron_max_loops_per_run'					=>	2,			// NOT USED. Check up to this number of assigned bitcoin addresses per soft cron run. Each loop involves number of DB queries as well as API query to blockchain - and this may slow down the site.
    'elists'																=>	array(),
+   'use_aggregated_api'										=>  '0',		// Use aggregated API to efficiently retrieve bitcoin address balance
 
    // ------- General Settings
    'license_key'                          =>  'UNLICENSED',
    'api_key'                              =>  substr(md5(microtime()), -16),
+   // New, ported from WooCommerce settings pages.
+   'service_provider'				 						  =>  'electrum_wallet',		// 'blockchain_info'
+   'electrum_mpk_saved'                   =>  '', // Saved, non-normalized value - MPK's separated by space / \n / ,
+   'electrum_mpks'                        =>  array(), // Normalized array of MPK's - derived from saved.
+   'confs_num'                            =>  '4', // number of confirmations required before accepting payment.
+   'exchange_rate_type'                   =>  'vwap', // 'realtime', 'bestrate'.
+   'exchange_multiplier'                  =>  '1.00',
+
    'delete_db_tables_on_uninstall'        =>  '0',
+   'autocomplete_paid_orders'							=>  '1',
    'enable_soft_cron_job'                 =>  '1',    // Enable "soft" Wordpress-driven cron jobs.
 
    // ------- Copy of $this->settings of 'BWWC_Bitcoin' class.
+   // DEPRECATED (only blockchain.info related settings still remain there.)
    'gateway_settings'                     =>  array('confirmations' => 6),
 
    // ------- Special settings
@@ -54,15 +69,29 @@ $g_BWWC__config_defaults = array (
 //===========================================================================
 
 //===========================================================================
-function BWWC__GetPluginNameVersionEdition()
+function BWWC__GetPluginNameVersionEdition($please_donate = true)
 {
-   return '<h2 style="border-bottom:1px solid #DDD;padding-bottom:10px;margin-bottom:20px;">' .
+  $return_data = '<h2 style="border-bottom:1px solid #DDD;padding-bottom:10px;margin-bottom:20px;">' .
             BWWC_PLUGIN_NAME . ', version: <span style="color:#EE0000;">' .
             BWWC_VERSION. '</span> [<span style="color:#EE0000;background-color:#FFFF77;">&nbsp;' .
             BWWC_EDITION . '&nbsp;</span> edition]' .
-          '</h2>'
-          . '<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate BTC to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>or via Paypal to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">donate@bitcoinway.com</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:95%;">(All supporters will be acknowledged and listed within plugin repository)</span></p>'
-          ;
+          '</h2>';
+
+
+  if ($please_donate)
+  {
+    $return_data .= '<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate BTC to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<u>or via Paypal to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">donate@bitcoinway.com</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size:95%;">All supporters will be acknowledged and listed within plugin repository. Please note that if you ever donated - you may use your donation as a credit toward <a href="' . BWWC__GetProUrl() . '"><b>Pro version</b></a>.</span></p>';
+  }
+
+  return $return_data;
+}
+//===========================================================================
+
+//===========================================================================
+function BWWC__GetProUrl() { return 'http://bitcoinway.com/products/'; }
+function BWWC__GetProLabel()
+{
+   return '<span style="background-color:#FF4;color:#F44;border:1px solid #F44;padding:2px 6px;font-family:\'Open Sans\',sans-serif;font-size:14px;border-radius:6px;"><a href="' . BWWC__GetProUrl() . '">PRO Only</a></span>';
 }
 //===========================================================================
 
@@ -188,6 +217,14 @@ function BWWC__update_settings ($bwwc_use_these_settings=false, $also_update_per
    //if ($bwwc_settings['aff_payout_percents3'] > 90)
    //   $bwwc_settings['aff_payout_percents3'] = "90";
    //---------------------------------------
+
+  // ---------------------------------------
+  // Post-process variables.
+
+  // Array of MPK's. Single MPK = element with idx=0
+  $bwwc_settings['electrum_mpks'] = preg_split("/[\s,]+/", $bwwc_settings['electrum_mpk_saved']);
+  // ---------------------------------------
+
 
   if ($also_update_persistent_settings)
     BWWC__update_persistent_settings ($bwwc_settings);
@@ -323,14 +360,14 @@ function BWWC__create_database_tables ($bwwc_settings)
   $query = "CREATE TABLE IF NOT EXISTS `$btc_addresses_table_name` (
     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
     `btc_address` char(36) NOT NULL,
-    `origin_id` char(64) NOT NULL DEFAULT '',
+    `origin_id` char(128) NOT NULL DEFAULT '',
     `index_in_wallet` bigint(20) NOT NULL DEFAULT '0',
     `status` char(16)  NOT NULL DEFAULT 'unknown',
     `last_assigned_to_ip` char(16) NOT NULL DEFAULT '0.0.0.0',
     `assigned_at` bigint(20) NOT NULL DEFAULT '0',
     `total_received_funds` DECIMAL( 16, 8 ) NOT NULL DEFAULT '0.00000000',
     `received_funds_checked_at` bigint(20) NOT NULL DEFAULT '0',
-    `address_meta` text NULL,
+    `address_meta` MEDIUMBLOB NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `btc_address` (`btc_address`),
     KEY `index_in_wallet` (`index_in_wallet`),
@@ -354,14 +391,51 @@ function BWWC__create_database_tables ($bwwc_settings)
       $must_update_settings = true;
     }
 
-		if ($version < 1.2)
-		{
+    if ($version < 1.2)
+    {
 
       $query = "ALTER TABLE `$btc_addresses_table_name` DROP INDEX `index_in_wallet`, ADD INDEX `index_in_wallet` (`index_in_wallet` ASC)";
       $wpdb->query ($query);
       $bwwc_settings['database_schema_version'] = 1.2;
       $must_update_settings = true;
     }
+
+    if ($version < 1.3)
+    {
+
+      $query = "ALTER TABLE `$btc_addresses_table_name` CHANGE COLUMN `origin_id` `origin_id` char(128)";
+      $wpdb->query ($query);
+      $bwwc_settings['database_schema_version'] = 1.3;
+      $must_update_settings = true;
+
+      $mpk = @$bwwc_settings['gateway_settings']['electrum_master_public_key'];
+      if ($mpk)
+      {
+        // Replace hashed values of MPK in DB with real MPK values.
+        $mpk_old_value = 'electrum.mpk.' . md5($mpk);
+        // UPDATE table_name SET field = REPLACE(field, 'foo', 'bar') WHERE INSTR(field, 'foo') > 0;
+        // UPDATE [table_name] SET [field_name] = REPLACE([field_name], "foo", "bar");
+        $query = "UPDATE `$btc_addresses_table_name` SET `origin_id` = '$mpk' WHERE `origin_id` = '$mpk_old_value'";
+        $wpdb->query ($query);
+
+        // Copy settings from old location to new, if new is empty.
+        if (!@$bwwc_settings['electrum_mpk_saved'])
+        {
+          $bwwc_settings['electrum_mpk_saved'] = $mpk;
+          // 'BWWC__update_settings()' will populate $bwwc_settings['electrum_mpks'].
+        }
+      }
+    }
+
+    if ($version < 1.4)
+    {
+
+      $query = "ALTER TABLE `$btc_addresses_table_name` MODIFY `address_meta` MEDIUMBLOB";
+      $wpdb->query ($query);
+      $bwwc_settings['database_schema_version'] = 1.4;
+      $must_update_settings = true;
+    }
+
   }
 
   if ($must_update_settings)

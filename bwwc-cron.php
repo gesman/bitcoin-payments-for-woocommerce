@@ -23,7 +23,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 
   $bwwc_settings = BWWC__get_settings ();
 
-  if (@$bwwc_settings['gateway_settings']['service_provider'] != 'electrum-wallet')
+  if (@$bwwc_settings['service_provider'] != 'electrum_wallet')
   {
     return; // Only active electrum wallet as a service provider needs cron job
   }
@@ -33,7 +33,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 
   $funds_received_value_expires_in_secs = $bwwc_settings['funds_received_value_expires_in_mins'] * 60;
   $assigned_address_expires_in_secs     = $bwwc_settings['assigned_address_expires_in_mins'] * 60;
-  $confirmations_required = $bwwc_settings['gateway_settings']['confirmations'];
+  $confirmations_required = $bwwc_settings['confs_num'];
 
   $clean_address = NULL;
   $current_time = time();
@@ -55,6 +55,7 @@ function BWWC_cron_job_worker ($hardcron=false)
       )
       AND (('$current_time' - `received_funds_checked_at`) > '$funds_received_value_expires_in_secs')
       ORDER BY `received_funds_checked_at` ASC;"; // Check the ones that haven't been checked for longest time
+
   $rows_for_balance_check = $wpdb->get_results ($query, ARRAY_A);
 
   if (is_array($rows_for_balance_check))
@@ -72,13 +73,20 @@ function BWWC_cron_job_worker ($hardcron=false)
 
 		  // Prepare 'address_meta' for use.
 		  $address_meta    = BWWC_unserialize_address_meta (@$row_for_balance_check['address_meta']);
-		  $last_order_info = @$address_meta['orders'][0];
+			$address_request_array = array();
+			$address_request_array['dcontext1'] = strlen(@$row_for_balance_check['address_meta']) . ":" . strlen($address_meta); // Arr test, delete it.
+			$address_request_array['address_meta'] = $address_meta;
 
-		  $row_id       = $row_for_balance_check['id'];
 
+		  // Retrieve current balance at address considering required confirmations number and api_timemout value.
+			$address_request_array['btc_address'] = $row_for_balance_check['btc_address'];
+			$address_request_array['required_confirmations'] = $confirmations_required;
+			$address_request_array['api_timeout'] = $bwwc_settings['blockchain_api_timeout_secs'];
+		  $balance_info_array = BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings);
 
-		  // Retrieve current balance at address.
-		  $balance_info_array = BWWC__getreceivedbyaddress_info ($row_for_balance_check['btc_address'], $confirmations_required, $bwwc_settings['blockchain_api_timeout_secs']);
+		  $last_order_info = @$address_request_array['address_meta']['orders'][0];
+		  $row_id          = $row_for_balance_check['id'];
+
 		  if ($balance_info_array['result'] == 'success')
 		  {
 		    /*
@@ -226,13 +234,13 @@ function BWWC_cron_job_worker ($hardcron=false)
   // Try to retrieve mpk from copy of settings.
   if ($hardcron)
   {
-    $electrum_mpk = @$bwwc_settings['gateway_settings']['electrum_master_public_key'];
+    $electrum_mpk = BWWC__get_next_available_mpk();
 
-    if ($electrum_mpk && @$bwwc_settings['gateway_settings']['service_provider'] == 'electrum-wallet')
+    if ($electrum_mpk && @$bwwc_settings['service_provider'] == 'electrum_wallet')
     {
       // Calculate number of unused addresses belonging to currently active electrum wallet
 
-      $origin_id = 'electrum.mpk.' . md5($electrum_mpk);
+      $origin_id = $electrum_mpk;
 
       $current_time = time();
       $assigned_address_expires_in_secs     = $bwwc_settings['assigned_address_expires_in_mins'] * 60;

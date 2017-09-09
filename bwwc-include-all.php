@@ -8,10 +8,11 @@ http://www.bitcoinway.com/
 // Global definitions
 if (!defined('BWWC_PLUGIN_NAME'))
   {
-  define('BWWC_VERSION',           '3.02');
+  define('BWWC_VERSION',           '4.11');
 
   //-----------------------------------------------
   define('BWWC_EDITION',           'Standard');    
+
 
   //-----------------------------------------------
   define('BWWC_SETTINGS_NAME',     'BWWC-Settings');
@@ -45,14 +46,13 @@ if (defined('BWWC_MUST_LOAD_WP') && !defined('WP_USE_THEMES') && !defined('ABSPA
 //------------------------------------------
 
 
-// This loads the phpecc modules and selects best math library
-require_once (dirname(__FILE__) . '/phpecc/classes/util/bcmath_Utils.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/util/gmp_Utils.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/interface/CurveFpInterface.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/CurveFp.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/interface/PointInterface.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/Point.php');
-require_once (dirname(__FILE__) . '/phpecc/classes/NumberTheory.php');
+// This loads necessary modules and selects best math library
+require_once (dirname(__FILE__) . '/libs/util/bcmath_Utils.php');
+require_once (dirname(__FILE__) . '/libs/util/gmp_Utils.php');
+require_once (dirname(__FILE__) . '/libs/CurveFp.php');
+require_once (dirname(__FILE__) . '/libs/Point.php');
+require_once (dirname(__FILE__) . '/libs/NumberTheory.php');
+require_once (dirname(__FILE__) . '/libs/ElectrumHelper.php');
 
 require_once (dirname(__FILE__) . '/bwwc-cron.php');
 require_once (dirname(__FILE__) . '/bwwc-mpkgen.php');

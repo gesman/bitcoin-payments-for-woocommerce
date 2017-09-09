@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Cash Payments for WooCommerce
-https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
+Bitcoin Payments for WooCommerce
+http://www.bitcoinway.com/
 */
 
 
@@ -24,7 +24,7 @@ https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
        'result'                      => 'success', // OR 'error'
        'message'                     => '...',
        'host_reply_raw'              => '......',
-       'generated_bitcoin_address'   => '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj', // or false
+       'generated_bitcoin_address'   => '1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2', // or false
        );
 */
 //
@@ -36,7 +36,7 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
 
    // status = "unused", "assigned", "used"
    $btc_addresses_table_name     = $wpdb->prefix . 'bwwc_btc_addresses';
-   $origin_id                    = 'electrum.mpk.' . md5($electrum_mpk);
+   $origin_id                    = $electrum_mpk;
 
    $bwwc_settings = BWWC__get_settings ();
    $funds_received_value_expires_in_secs = $bwwc_settings['funds_received_value_expires_in_mins'] * 60;
@@ -124,7 +124,13 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
          // http://blockchain.info/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2 [?confirmations=6]
          //
          $address_to_verify_for_zero_balance = $address_to_verify_for_zero_balance_row['btc_address'];
-         $ret_info_array = BWWC__getreceivedbyaddress_info ($address_to_verify_for_zero_balance, 0, $bwwc_settings['blockchain_api_timeout_secs']);
+
+         $address_request_array = array();
+         $address_request_array['btc_address'] = $address_to_verify_for_zero_balance;
+         $address_request_array['required_confirmations'] = 0;
+         $address_request_array['api_timeout'] = $bwwc_settings['blockchain_api_timeout_secs'];
+         $ret_info_array = BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings);
+
          if ($ret_info_array['balance'] === false)
          {
            $blockchains_api_failures ++;
@@ -278,6 +284,22 @@ function BWWC__get_bitcoin_address_for_payment__electrum ($electrum_mpk, $order_
 //===========================================================================
 
 //===========================================================================
+// To accomodate for multiple MPK's and allowed key limits per MPK
+function BWWC__get_next_available_mpk ($bwwc_settings=false)
+{
+  //global $wpdb;
+  //$btc_addresses_table_name = $wpdb->prefix . 'bwwc_btc_addresses';
+  // Scan DB for MPK which has number of in-use keys less than alowed limit
+  // ...
+
+  if (!$bwwc_settings)
+    $bwwc_settings = BWWC__get_settings ();
+
+  return @$bwwc_settings['electrum_mpks'][0];
+}
+//===========================================================================
+
+//===========================================================================
 /*
 Returns:
    $ret_info_array = array (
@@ -302,9 +324,9 @@ function BWWC__generate_new_bitcoin_address_for_electrum_wallet ($bwwc_settings=
   if (!$electrum_mpk)
   {
     // Try to retrieve it from copy of settings.
-    $electrum_mpk = @$bwwc_settings['gateway_settings']['electrum_master_public_key'];
+    $electrum_mpk = BWWC__get_next_available_mpk();
 
-    if (!$electrum_mpk || @$bwwc_settings['gateway_settings']['service_provider'] != 'electrum-wallet')
+    if (!$electrum_mpk || @$bwwc_settings['service_provider'] != 'electrum_wallet')
     {
       // Bitcoin gateway settings either were not saved
      $ret_info_array = array (
@@ -317,7 +339,7 @@ function BWWC__generate_new_bitcoin_address_for_electrum_wallet ($bwwc_settings=
     }
   }
 
-  $origin_id = 'electrum.mpk.' . md5($electrum_mpk);
+  $origin_id = $electrum_mpk;
 
   $funds_received_value_expires_in_secs = $bwwc_settings['funds_received_value_expires_in_mins'] * 60;
   $assigned_address_expires_in_secs     = $bwwc_settings['assigned_address_expires_in_mins'] * 60;
@@ -336,7 +358,12 @@ function BWWC__generate_new_bitcoin_address_for_electrum_wallet ($bwwc_settings=
   do
   {
     $new_btc_address = BWWC__MATH_generate_bitcoin_address_from_mpk ($electrum_mpk, $next_key_index);
-    $ret_info_array  = BWWC__getreceivedbyaddress_info ($new_btc_address, 0, $bwwc_settings['blockchain_api_timeout_secs']);
+
+		$address_request_array = array();
+		$address_request_array['btc_address'] = $new_btc_address;
+		$address_request_array['required_confirmations'] = 0;
+		$address_request_array['api_timeout'] = $bwwc_settings['blockchain_api_timeout_secs'];
+		$ret_info_array = BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings);
     $total_new_keys_generated ++;
 
     if ($ret_info_array['balance'] === false)
@@ -434,6 +461,12 @@ function BWWC_serialize_address_meta ($address_meta_arr)
 
 //===========================================================================
 /*
+$address_request_array = array (
+  'btc_address'            => '1xxxxxxx',
+  'required_confirmations' => '6',
+  'api_timeout'						 => 10,
+  );
+
 $ret_info_array = array (
   'result'                      => 'success',
   'message'                     => "",
@@ -441,15 +474,24 @@ $ret_info_array = array (
   'balance'                     => false == error, else - balance
   );
 */
-function BWWC__getreceivedbyaddress_info ($btc_address, $required_confirmations=0, $api_timeout=10)
+
+function BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings=false)
 {
-  // http://blockexplorer.com/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2
-  // http://blockchain.info/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2 [?confirmations=6]
+	// https://blockchain.bitcoinway.com/?q=getreceivedbyaddress
+	//    with POST: btc_address=12fFTMkeu3mcunCtGHtWb7o5BcWA9eFx7R&required_confirmations=6&api_timeout=20
+  // https://blockexplorer.com/api/addr/1KWd23GZ4BmTMo9zcsUZXpWP4M8hmxZwRU/totalReceived
+  // https://blockchain.info/q/getreceivedbyaddress/1H9uAP3x439YvQDoKNGgSYCg3FmrYRzpD2 [?confirmations=6]
+	if (!$bwwc_settings)
+  	$bwwc_settings = BWWC__get_settings ();
+
+	$btc_address            = $address_request_array['btc_address'];
+	$required_confirmations = $address_request_array['required_confirmations'];
+	$api_timeout            = $address_request_array['api_timeout'];
 
    if ($required_confirmations)
    {
-      $confirmations_url_part_bec = "/$required_confirmations";
-      $confirmations_url_part_bci = "/$required_confirmations";
+      $confirmations_url_part_bec = ""; // No longer seems to be available
+      $confirmations_url_part_bci = "?confirmations=$required_confirmations";
    }
    else
    {
@@ -457,18 +499,31 @@ function BWWC__getreceivedbyaddress_info ($btc_address, $required_confirmations=
       $confirmations_url_part_bci = "";
    }
 
-   // Help: http://blockexplorer.com/
-   $funds_received = BWWC__file_get_contents ('http://blockexplorer.com/q/getreceivedbyaddress/' . $btc_address . $confirmations_url_part_bec, true, $api_timeout);
+   $funds_received=false;
+	// Try to get get address balance from aggregated API first to avoid excessive hits to blockchain and other services.
+	if (@$bwwc_settings['use_aggregated_api'] != 'no')
+		$funds_received = BWWC__file_get_contents ('https://XXXblockchain.bitcoinway.com/?q=getreceivedbyaddress', true, $api_timeout, false, true, $address_request_array);
+
+  if (!is_numeric($funds_received))
+  {
+   // Help: http://blockchain.info/q
+   $funds_received = BWWC__file_get_contents ('http://blockdozer.com/insight-api/addr/' . $btc_address . '/totalReceived', true, $api_timeout);
+
    if (!is_numeric($funds_received))
    {
-      $blockexplorer_com_failure_reply = $funds_received;
-      // Help: http://blockchain.info/q
-      $funds_received = BWWC__file_get_contents ('http://blockchain.info/q/getreceivedbyaddress/' . $btc_address, true, $api_timeout);
-      $blockchain_info_failure_reply = $funds_received;
+     $blockchain_info_failure_reply = $funds_received;
 
-		  if (is_numeric($funds_received))
-				$funds_received = sprintf("%.8f", $funds_received / 100000000.0);
+    // Help: https://blockexplorer.com/api
+    // NOTE blockexplorer API no longer has 'confirmations' parameter. Hence if blockchain.info call fails - blockchain
+    //      will report successful transaction immediately.
+    $funds_received = BWWC__file_get_contents ('https://bitcoincash.blockexplorer.com/api/addr/' . $btc_address . '/totalReceived', true, $api_timeout);
+
+      $blockexplorer_com_failure_reply = $funds_received;
    }
+ }
+
+  if (is_numeric($funds_received))
+    $funds_received = sprintf("%.8f", $funds_received / 100000000.0);
 
   if (is_numeric($funds_received))
   {
@@ -561,15 +616,9 @@ function BWWC__generate_temporary_bitcoin_address__blockchain_info ($forwarding_
 //		'getfirst' -- pick first successfully retireved rate
 //		'getall'   -- retrieve from all possible exchange rate services and then pick the best rate.
 //
-// $rate_type:
-//    'vwap'    	-- weighted average as per: http://en.wikipedia.org/wiki/VWAP
-//    'realtime' 	-- Realtime exchange rate
-//    'bestrate'  -- maximize number of bitcoins to get for item priced in currency: == min (avg, vwap, sell)
-//                 This is useful to ensure maximum bitcoin gain for stores priced in other currencies.
-//                 Note: This is the least favorable exchange rate for the store customer.
-// $get_ticker_string - true - ticker string of all exchange types for the given currency.
+// $get_ticker_string - true - HTML formatted text message instead of pure number returned.
 
-function BWWC__get_exchange_rate_per_bitcoin ($currency_code, $rate_retrieval_method = 'getfirst', $rate_type = 'vwap', $get_ticker_string=false)
+function BWWC__get_exchange_rate_per_bitcoin ($currency_code, $rate_retrieval_method = 'getfirst', $get_ticker_string=false)
 {
    if ($currency_code == 'BTC')
       return "1.00";   // 1:1
@@ -594,11 +643,16 @@ Realtime:
 */
 
 	$bwwc_settings = BWWC__get_settings ();
+  $exchange_rate_type = $bwwc_settings['exchange_rate_type'];
+  $exchange_multiplier = $bwwc_settings['exchange_multiplier'];
+  if (!$exchange_multiplier)
+    $exchange_multiplier = 1;
 
 	$current_time  = time();
 	$cache_hit     = false;
-	$requested_cache_method_type = $rate_retrieval_method . '|' . $rate_type;
-	$ticker_string = "<span style='color:darkgreen;'>Current Rates for 1 Bitcoin (according to settings) (in {$currency_code})={{{EXCHANGE_RATE}}}</span>";
+	$requested_cache_method_type = $rate_retrieval_method . '|' . $exchange_rate_type;
+	$ticker_string = "<span style='color:#222;'>According to your settings (including multiplier), current calculated rate for 1 Bitcoin (in {$currency_code})={{{EXCHANGE_RATE}}}</span>";
+	$ticker_string_error = "<span style='color:red;background-color:#FFA'>WARNING: Cannot determine exchange rates (for '$currency_code')! {{{ERROR_MESSAGE}}} Make sure your PHP settings are configured properly and your server can (is allowed to) connect to external WEB services via PHP.</wspan>";
 
 
 	$this_currency_info = @$bwwc_settings['exchange_rates'][$currency_code][$requested_cache_method_type];
@@ -610,10 +664,11 @@ Realtime:
 
 	     // Exchange rates cache hit
 	     // Use cached value as it is still fresh.
+      $final_rate = $this_currency_info['exchange_rate'] / $exchange_multiplier;
 			if ($get_ticker_string)
-	  		return str_replace('{{{EXCHANGE_RATE}}}', $this_currency_info['exchange_rate'], $ticker_string);
+	  		return str_replace('{{{EXCHANGE_RATE}}}', $final_rate, $ticker_string);
 	  	else
-	  		return $this_currency_info['exchange_rate'];
+	  		return $final_rate;
 	  }
 	}
 
@@ -622,40 +677,71 @@ Realtime:
 
 
 	// bitcoinaverage covers both - vwap and realtime
-	$rates[] = BWWC__get_exchange_rate_from_bitcoinaverage($currency_code, $rate_type, $bwwc_settings);  // Requested vwap, realtime or bestrate
+	$rates[] = BWWC__get_exchange_rate_from_bitcoinaverage($currency_code, $exchange_rate_type, $bwwc_settings);  // Requested vwap, realtime or bestrate
 	if ($rates[0])
 	{
 
 		// First call succeeded
 
-		if ($rate_type == 'bestrate')
-			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings);		   // Requested bestrate
+		if ($exchange_rate_type == 'bestrate')
+			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $exchange_rate_type, $bwwc_settings);		   // Requested bestrate
 
-		$exchange_rate = min(array_filter ($rates));
-  	// Save new currency exchange rate info in cache
- 		BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+		$rates = array_filter ($rates);
+		if (count($rates) && $rates[0])
+		{
+			$exchange_rate = min($rates);
+  		// Save new currency exchange rate info in cache
+ 			BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+ 		}
+ 		else
+ 			$exchange_rate = false;
  	}
  	else
  	{
 
  		// First call failed
-		if ($rate_type == 'vwap')
- 			$rates[] = BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $rate_type, $bwwc_settings);
+		if ($exchange_rate_type == 'vwap')
+ 			$rates[] = BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $exchange_rate_type, $bwwc_settings);
  		else
-			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings);		   // Requested bestrate
+			$rates[] = BWWC__get_exchange_rate_from_bitpay ($currency_code, $exchange_rate_type, $bwwc_settings);		   // Requested bestrate
 
-		$exchange_rate = min(array_filter ($rates));
-		if ($exchange_rate)	// If array contained only meaningless data (all 'false's)
-	 		BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+		$rates = array_filter ($rates);
+		if (count($rates) && $rates[0])
+		{
+			$exchange_rate = min($rates);
+  		// Save new currency exchange rate info in cache
+ 			BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_method_type, $exchange_rate);
+ 		}
+ 		else
+ 			$exchange_rate = false;
  	}
 
 
 	if ($get_ticker_string)
-		return str_replace('{{{EXCHANGE_RATE}}}', $exchange_rate, $ticker_string);
-	else
-		return $exchange_rate;
+	{
+		if ($exchange_rate)
+    {
+			return str_replace('{{{EXCHANGE_RATE}}}', $exchange_rate / $exchange_multiplier, $ticker_string);
+    }
+		else
+		{
+			$extra_error_message = "";
+			$fns = array ('file_get_contents', 'curl_init', 'curl_setopt', 'curl_setopt_array', 'curl_exec');
+			$fns = array_filter ($fns, 'BWWC__function_not_exists');
 
+			if (count($fns))
+				$extra_error_message = "The following PHP functions are disabled on your server: " . implode (", ", $fns) . ".";
+
+			return str_replace('{{{ERROR_MESSAGE}}}', $extra_error_message, $ticker_string_error);
+		}
+	}
+	else
+		return $exchange_rate / $exchange_multiplier;
 }
+//===========================================================================
+
+//===========================================================================
+function BWWC__function_not_exists ($fname) { return !function_exists($fname); }
 //===========================================================================
 
 //===========================================================================
@@ -674,18 +760,28 @@ function BWWC__update_exchange_rate_cache ($currency_code, $requested_cache_meth
 // $rate_type: 'vwap' | 'realtime' | 'bestrate'
 function BWWC__get_exchange_rate_from_bitcoinaverage ($currency_code, $rate_type, $bwwc_settings)
 {
-	$source_url	=	"https://api.bitcoinaverage.com/ticker/global/{$currency_code}/";
+	$source_url	=	"https://apiv2.bitcoinaverage.com/indices/global/ticker/BCHUSD";
 	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
 
-	$rate_obj = json_decode(trim($result), true);
+	$rate_obj = @json_decode(trim($result), true);
 
+	if (!is_array($rate_obj))
+		return false;
+
+
+	if (@$rate_obj['24h_avg'])
+		$rate_24h_avg = @$rate_obj['24h_avg'];
+	else if (@$rate_obj['last'] && @$rate_obj['ask'] && @$rate_obj['bid'])
+		$rate_24h_avg = ($rate_obj['last'] + $rate_obj['ask'] + $rate_obj['bid']) / 3;
+	else
+		$rate_24h_avg = @$rate_obj['last'];
 
 	switch ($rate_type)
 	{
-		case 'vwap'	:				return @$rate_obj['24h_avg'];
+		case 'vwap'	:				return $rate_24h_avg;
 		case 'realtime'	:		return @$rate_obj['last'];
 		case 'bestrate'	:
-		default:						return min (@$rate_obj['24h_avg'], @$rate_obj['last']);
+		default:						return min ($rate_24h_avg, @$rate_obj['last']);
 	}
 }
 //===========================================================================
@@ -694,10 +790,10 @@ function BWWC__get_exchange_rate_from_bitcoinaverage ($currency_code, $rate_type
 // $rate_type: 'vwap' | 'realtime' | 'bestrate'
 function BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $rate_type, $bwwc_settings)
 {
-	$source_url	=	"http://api.bitcoincharts.com/v1/weighted_prices.json";
+	$source_url	=	"http://XXXapi.bitcoincharts.com/v1/weighted_prices.json";
 	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
 
-	$rate_obj = json_decode(trim($result), true);
+	$rate_obj = @json_decode(trim($result), true);
 
 
 	// Only vwap rate is available
@@ -709,10 +805,12 @@ function BWWC__get_exchange_rate_from_bitcoincharts ($currency_code, $rate_type,
 // $rate_type: 'vwap' | 'realtime' | 'bestrate'
 function BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_settings)
 {
-	$source_url	=	"https://bitpay.com/api/rates";
+	$source_url	=	"https://XXXbitpay.com/api/rates";
 	$result = @BWWC__file_get_contents ($source_url, false, $bwwc_settings['exchange_rate_api_timeout_secs']);
 
-	$rate_objs = json_decode(trim($result), true);
+	$rate_objs = @json_decode(trim($result), true);
+	if (!is_array($rate_objs))
+		return false;
 
 	foreach ($rate_objs as $rate_obj)
 	{
@@ -735,34 +833,68 @@ function BWWC__get_exchange_rate_from_bitpay ($currency_code, $rate_type, $bwwc_
    Success => content
    Error   => if ($return_content_on_error == true) $content; else FALSE;
 */
-function BWWC__file_get_contents ($url, $return_content_on_error=false, $timeout=60, $user_agent=FALSE)
+function BWWC__file_get_contents ($url, $return_content_on_error=false, $timeout=60, $user_agent=FALSE, $is_post=false, $post_data="")
 {
+
    if (!function_exists('curl_init'))
       {
-      return @file_get_contents ($url);
+
+      	if (!$is_post)
+      	{
+					$ret_val = @file_get_contents ($url);
+					return $ret_val;
+				}
+				else
+				{
+					return false;
+				}
       }
 
-   $options = array(
-      CURLOPT_URL            => $url,
-      CURLOPT_RETURNTRANSFER => true,     // return web page
-      CURLOPT_HEADER         => false,    // don't return headers
-      CURLOPT_ENCODING       => "",       // handle compressed
-      CURLOPT_USERAGENT      => $user_agent?$user_agent:urlencode("Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.12 (KHTML, like Gecko) Chrome/9.0.576.0 Safari/534.12"), // who am i
+  $p       = substr(md5(microtime()), 24) . 'bw'; // curl post padding
+  $ch      = curl_init   ();
 
-      CURLOPT_AUTOREFERER    => true,     // set referer on redirect
-      CURLOPT_CONNECTTIMEOUT => $timeout,       // timeout on connect
-      CURLOPT_TIMEOUT        => $timeout,       // timeout on response in seconds.
-      CURLOPT_FOLLOWLOCATION => true,     // follow redirects
-      CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
-      );
+	if ($is_post)
+	{
+		$new_post_data = $post_data;
+		if (is_array($post_data))
+		{
+		foreach ($post_data as $k => $v)
+			{
+				$safetied = $v;
+				if (is_object($safetied))
+					$safetied = BWWC__object_to_array($safetied);
+				if (is_array($safetied))
+				{
+					$safetied = serialize($safetied);
+					$safetied = $p . str_replace('=', '_', BWWC__base64_encode($safetied));
+					$new_post_data[$k] = $safetied;
+				}
+			}
+		}
+	}
 
-   $ch      = curl_init   ();
+   // $options = array(
+   //    CURLOPT_URL            => $url,
+   //    CURLOPT_RETURNTRANSFER => true,     // return web page
+   //    CURLOPT_HEADER         => false,    // don't return headers
+   //    CURLOPT_ENCODING       => "",       // handle compressed
+   //    CURLOPT_USERAGENT      => $user_agent?$user_agent:urlencode("Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.12 (KHTML, like Gecko) Chrome/9.0.576.0 Safari/534.12"), // who am i
 
-   if (function_exists('curl_setopt_array'))
-      {
-      curl_setopt_array      ($ch, $options);
-      }
-   else
+   //    CURLOPT_AUTOREFERER    => true,     // set referer on redirect
+   //    CURLOPT_CONNECTTIMEOUT => $timeout,       // timeout on connect
+   //    CURLOPT_TIMEOUT        => $timeout,       // timeout on response in seconds.
+   //    CURLOPT_FOLLOWLOCATION => true,     // follow redirects
+   //    CURLOPT_MAXREDIRS      => 10,       // stop after 10 redirects
+   //    CURLOPT_SSL_VERIFYPEER => false,    // Disable SSL verification
+   //    CURLOPT_POST           => $is_post,
+   //    CURLOPT_POSTFIELDS     => $new_post_data,
+   //    );
+
+   // if (function_exists('curl_setopt_array'))
+   //    {
+   //    curl_setopt_array      ($ch, $options);
+   //    }
+   // else
       {
       // To accomodate older PHP 5.0.x systems
       curl_setopt ($ch, CURLOPT_URL            , $url);
@@ -775,12 +907,16 @@ function BWWC__file_get_contents ($url, $return_content_on_error=false, $timeout
       curl_setopt ($ch, CURLOPT_TIMEOUT        , $timeout);       // timeout on response in seconds.
       curl_setopt ($ch, CURLOPT_FOLLOWLOCATION , true);     // follow redirects
       curl_setopt ($ch, CURLOPT_MAXREDIRS      , 10);       // stop after 10 redirects
+      curl_setopt($ch, CURLOPT_SSL_VERIFYPEER  , false);    // Disable SSL verifications
+      if ($is_post) { curl_setopt ($ch, CURLOPT_POST, true); }
+      if ($is_post) { curl_setopt ($ch, CURLOPT_POSTFIELDS, $new_post_data); }
       }
 
    $content = curl_exec   ($ch);
    $err     = curl_errno  ($ch);
    $header  = curl_getinfo($ch);
    // $errmsg  = curl_error  ($ch);
+
 
    curl_close             ($ch);
 
@@ -793,6 +929,15 @@ function BWWC__file_get_contents ($url, $return_content_on_error=false, $timeout
       else
          return FALSE;
    }
+}
+//===========================================================================
+
+//===========================================================================
+function BWWC__object_to_array ($object)
+{
+	if (!is_object($object) && !is_array($object))
+    return $object;
+  return array_map('BWWC__object_to_array', (array) $object);
 }
 //===========================================================================
 
@@ -929,5 +1074,175 @@ function BWWC__send_email ($email_to, $email_from, $subject, $plain_body)
    $ret_code = @mail ($email_to, $subject, $message, $headers);
 
    return $ret_code;
+}
+//===========================================================================
+
+//===========================================================================
+function BWWC__is_gateway_valid_for_use (&$ret_reason_message=NULL)
+{
+  $valid = true;
+  $bwwc_settings = BWWC__get_settings ();
+
+////   'service_provider'                     =>  'electrum_wallet',    // 'blockchain_info'
+
+  //----------------------------------
+  // Validate settings
+  if ($bwwc_settings['service_provider']=='electrum_wallet')
+  {
+    $mpk = BWWC__get_next_available_mpk();
+    if (!$mpk)
+    {
+      $reason_message = __("Please specify Electrum Master Public Key (MPK). <br />To retrieve MPK: launch your electrum wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
+      $valid = false;
+    }
+    else if (!preg_match ('/^[a-f0-9]{128}$/', $mpk) && !preg_match ('/^xpub[a-zA-Z0-9]{107}$/', $mpk))
+    {
+      $reason_message = __("Electrum Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
+      $valid = false;
+    }
+    else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
+    {
+      $reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)!
+        <br />We recommend <a href='http://hostrum.com/' target='_blank'><b>HOSTRUM</b></a> as the best hosting services provider.", 'woocommerce');
+      $valid = false;
+    }
+  }
+
+  if (!$valid)
+  {
+    if ($ret_reason_message !== NULL)
+      $ret_reason_message = $reason_message;
+    return false;
+  }
+
+  //----------------------------------
+
+  //----------------------------------
+  // Validate connection to exchange rate services
+
+  $store_currency_code = 'USD';
+  if ($store_currency_code != 'BTC')
+  {
+    $currency_rate = BWWC__get_exchange_rate_per_bitcoin ($store_currency_code, 'getfirst', false);
+    if (!$currency_rate)
+    {
+      $valid = false;
+
+      // Assemble error message.
+      $error_msg = "ERROR: Cannot determine exchange rates (for '$store_currency_code')! {{{ERROR_MESSAGE}}} Make sure your PHP settings are configured properly and your server can (is allowed to) connect to external WEB services via PHP.";
+      $extra_error_message = "";
+      $fns = array ('file_get_contents', 'curl_init', 'curl_setopt', 'curl_setopt_array', 'curl_exec');
+      $fns = array_filter ($fns, 'BWWC__function_not_exists');
+      $extra_error_message = "";
+      if (count($fns))
+        $extra_error_message = "The following PHP functions are disabled on your server: " . implode (", ", $fns) . ".";
+
+      $reason_message = str_replace('{{{ERROR_MESSAGE}}}', $extra_error_message, $error_msg);
+
+      if ($ret_reason_message !== NULL)
+        $ret_reason_message = $reason_message;
+      return false;
+    }
+  }
+  //----------------------------------
+
+  //----------------------------------
+  // NOTE: currenly this check is not performed.
+  //      Do not limit support with present list of currencies. This was originally created because exchange rate APIs did not support many, but today
+  //      they do support many more currencies, hence this check is removed for now.
+
+  // Validate currency
+  // $currency_code            = get_woocommerce_currency();
+  // $supported_currencies_arr = BWWC__get_settings ('supported_currencies_arr');
+
+  // if ($currency_code != 'BTC' && !@in_array($currency_code, $supported_currencies_arr))
+  // {
+  //  $reason_message = __("Store currency is set to unsupported value", 'woocommerce') . "('{$currency_code}'). " . __("Valid currencies: ", 'woocommerce') . implode ($supported_currencies_arr, ", ");
+  //  if ($ret_reason_message !== NULL)
+  //    $ret_reason_message = $reason_message;
+  // return false;
+  // }
+
+  return true;
+  //----------------------------------
+}
+//===========================================================================
+
+
+//===========================================================================
+// Some hosting services disables base64_encode/decode.
+// this is equivalent replacement to fix errors.
+function BWWC__base64_decode($input)
+{
+	  if (function_exists('base64_decode'))
+	  	return base64_decode($input);
+
+    $keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+    $chr1 = $chr2 = $chr3 = "";
+    $enc1 = $enc2 = $enc3 = $enc4 = "";
+    $i = 0;
+    $output = "";
+
+    // remove all characters that are not A-Z, a-z, 0-9, +, /, or =
+    $input = preg_replace("[^A-Za-z0-9\+\/\=]", "", $input);
+
+    do {
+        $enc1 = strpos($keyStr, substr($input, $i++, 1));
+        $enc2 = strpos($keyStr, substr($input, $i++, 1));
+        $enc3 = strpos($keyStr, substr($input, $i++, 1));
+        $enc4 = strpos($keyStr, substr($input, $i++, 1));
+        $chr1 = ($enc1 << 2) | ($enc2 >> 4);
+        $chr2 = (($enc2 & 15) << 4) | ($enc3 >> 2);
+        $chr3 = (($enc3 & 3) << 6) | $enc4;
+        $output = $output . chr((int) $chr1);
+        if ($enc3 != 64) {
+            $output = $output . chr((int) $chr2);
+        }
+        if ($enc4 != 64) {
+            $output = $output . chr((int) $chr3);
+        }
+        $chr1 = $chr2 = $chr3 = "";
+        $enc1 = $enc2 = $enc3 = $enc4 = "";
+    } while ($i < strlen($input));
+    return urldecode($output);
+}
+
+function BWWC__base64_encode($data)
+{
+	  if (function_exists('base64_encode'))
+	  	return base64_encode($data);
+
+    $b64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    $o1 = $o2 = $o3 = $h1 = $h2 = $h3 = $h4 = $bits = $i = 0;
+    $ac = 0;
+    $enc = '';
+    $tmp_arr = array();
+    if (!$data) {
+        return data;
+    }
+    do {
+    // pack three octets into four hexets
+    $o1 = charCodeAt($data, $i++);
+    $o2 = charCodeAt($data, $i++);
+    $o3 = charCodeAt($data, $i++);
+    $bits = $o1 << 16 | $o2 << 8 | $o3;
+    $h1 = $bits >> 18 & 0x3f;
+    $h2 = $bits >> 12 & 0x3f;
+    $h3 = $bits >> 6 & 0x3f;
+    $h4 = $bits & 0x3f;
+    // use hexets to index into b64, and append result to encoded string
+    $tmp_arr[$ac++] = charAt($b64, $h1).charAt($b64, $h2).charAt($b64, $h3).charAt($b64, $h4);
+    } while ($i < strlen($data));
+    $enc = implode($tmp_arr, '');
+    $r = (strlen($data) % 3);
+    return ($r ? substr($enc, 0, ($r - 3)) : $enc) . substr('===', ($r || 3));
+}
+
+function charCodeAt($data, $char) {
+    return ord(substr($data, $char, 1));
+}
+
+function charAt($data, $char) {
+    return substr($data, $char, 1);
 }
 //===========================================================================

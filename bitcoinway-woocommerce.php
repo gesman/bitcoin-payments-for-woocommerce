@@ -5,7 +5,7 @@
 Plugin Name: Bitcoin Payments for WooCommerce
 Plugin URI: http://www.bitcoinway.com/
 Description: Bitcoin Payments for WooCommerce plugin allows you to accept payments in bitcoins for physical and digital products at your WooCommerce-powered online store.
-Version: 3.02
+Version: 4.11
 Author: BitcoinWay
 Author URI: http://www.bitcoinway.com/
 License: GNU General Public License 2.0 (GPL) http://www.gnu.org/licenses/gpl.html
@@ -122,7 +122,8 @@ function BWWC_create_menu()
         'administrator',                                        // Capability
         'bwwc-settings',                                        // Handle - First submenu's handle must be equal to parent's handle to avoid duplicate menu entry.
         'BWWC__render_general_settings_page',                   // Function
-        plugins_url('/images/bitcoin_16x.png', __FILE__)                // Icon URL
+
+        'https://blockchain.bitcoinway.com/images/bitcoin_16x.png?icon=X'      // Icon URL
         );
 
     add_submenu_page (
@@ -134,7 +135,14 @@ function BWWC_create_menu()
         'BWWC__render_general_settings_page'                    // Function
         );
 
-
+    add_submenu_page (
+        'bwwc-settings',                                        // Parent
+        __("BitcoinWay Plugin Advanced Settings", BWWC_I18N_DOMAIN),       // Page title
+        __("Advanced Settings", BWWC_I18N_DOMAIN),                // Menu title
+        'administrator',                                        // Capability
+        'bwwc-settings-advanced',                        // Handle - First submenu's handle must be equal to parent's handle to avoid duplicate menu entry.
+        'BWWC__render_advanced_settings_page'            // Function
+        );
 }
 //===========================================================================
 
