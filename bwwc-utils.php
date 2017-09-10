@@ -500,13 +500,13 @@ function BWWC__getreceivedbyaddress_info ($address_request_array, $bwwc_settings
    }
 
    $funds_received=false;
-	// Try to get get address balance from aggregated API first to avoid excessive hits to blockchain and other services.
+	// ** disabled this url for BCH fork ** Try to get get address balance from aggregated API first to avoid excessive hits to blockchain and other services.
 	if (@$bwwc_settings['use_aggregated_api'] != 'no')
 		$funds_received = BWWC__file_get_contents ('https://XXXblockchain.XXXbitcoinway.com/?q=getreceivedbyaddress', true, $api_timeout, false, true, $address_request_array);
 
   if (!is_numeric($funds_received))
   {
-   // Help: http://blockchain.info/q
+   // Help: http://blockdozer.com
    $funds_received = BWWC__file_get_contents ('http://blockdozer.com/insight-api/addr/' . $btc_address . '/totalReceived', true, $api_timeout);
 
    if (!is_numeric($funds_received))

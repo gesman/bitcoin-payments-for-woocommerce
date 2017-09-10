@@ -8,7 +8,7 @@ https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 // Global definitions
 if (!defined('BWWC_PLUGIN_NAME'))
   {
-  define('BWWC_VERSION',           '4.11');
+  define('BWWC_VERSION',           '3.03');
 
   //-----------------------------------------------
   define('BWWC_EDITION',           'Standard');    

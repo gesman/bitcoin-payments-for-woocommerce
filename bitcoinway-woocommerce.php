@@ -128,7 +128,7 @@ function BWWC_create_menu()
 
     add_submenu_page (
         'bwwc-settings',                                        // Parent
-        __("WooCommerce Bitcoin Payments Gateway", BWWC_I18N_DOMAIN),                   // Page title
+        __("WooCommerce Bitcoin Cash Payments Gateway", BWWC_I18N_DOMAIN),                   // Page title
         __("General Settings", BWWC_I18N_DOMAIN),               // Menu Title
         'administrator',                                        // Capability
         'bwwc-settings',                                        // Handle - First submenu's handle must be equal to parent's handle to avoid duplicate menu entry.
@@ -137,7 +137,7 @@ function BWWC_create_menu()
 
     add_submenu_page (
         'bwwc-settings',                                        // Parent
-        __("BitcoinWay Plugin Advanced Settings", BWWC_I18N_DOMAIN),       // Page title
+        __("Bitcoin Cash Plugin Advanced Settings", BWWC_I18N_DOMAIN),       // Page title
         __("Advanced Settings", BWWC_I18N_DOMAIN),                // Menu title
         'administrator',                                        // Capability
         'bwwc-settings-advanced',                        // Handle - First submenu's handle must be equal to parent's handle to avoid duplicate menu entry.

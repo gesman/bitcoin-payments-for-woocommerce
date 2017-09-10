@@ -1,7 +1,7 @@
 <?php
 /*
-Bitcoin Payments for WooCommerce
-http://www.bitcoinway.com/
+Bitcoin Cash Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
 */
 
 
@@ -229,7 +229,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 	// ...
 
   //-----------------------------------------------------
-  // Pre-generate new bitcoin address for electrum wallet
+  // Pre-generate new bitcoin cash address for electron cash wallet
 
   // Try to retrieve mpk from copy of settings.
   if ($hardcron)
@@ -238,7 +238,7 @@ function BWWC_cron_job_worker ($hardcron=false)
 
     if ($electrum_mpk && @$bwwc_settings['service_provider'] == 'electrum_wallet')
     {
-      // Calculate number of unused addresses belonging to currently active electrum wallet
+      // Calculate number of unused addresses belonging to currently active electron cash wallet
 
       $origin_id = $electrum_mpk;
 

@@ -103,19 +103,19 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	    	// Validate settings
 	    	if (!$this->service_provider)
 	    	{
-	    		$reason_message = __("Bitcoin Service Provider is not selected", 'woocommerce');
+	    		$reason_message = __("Bitcoin Cash Service Provider is not selected", 'woocommerce');
 	    		$valid = false;
 	    	}
 	    	else if ($this->service_provider=='blockchain_info')
 	    	{
 	    		if ($this->bitcoin_addr_merchant == '')
 	    		{
-		    		$reason_message = __("Your personal bitcoin address is not selected", 'woocommerce');
+		    		$reason_message = __("Your personal bitcoin cash address is not selected", 'woocommerce');
 		    		$valid = false;
 	    		}
 	    		else if ($this->bitcoin_addr_merchant == '18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj')
 	    		{
-		    		$reason_message = __("Your personal bitcoin address is invalid. The address specified is Bitcoinway.com's donation address :)", 'woocommerce');
+		    		$reason_message = __("Your personal bitcoin cash address is invalid. The address specified is the donation address :)", 'woocommerce');
 		    		$valid = false;
 	    		}
 	    	}
@@ -124,17 +124,17 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
           $mpk = BWWC__get_next_available_mpk();
 	    		if (!$mpk)
 	    		{
-		    		$reason_message = __("Please specify Electrum Master Public Key (MPK) in Bitcoinway plugin settings. <br />To retrieve MPK: launch your electrum wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show", 'woocommerce');
+		    		$reason_message = __("Please specify Electron Cash Master Public Key (MPK) in Bitcoinway plugin settings. <br />To retrieve MPK: launch your electron cash wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show", 'woocommerce');
 		    		$valid = false;
 		    	}
 	    		else if (!preg_match ('/^[a-f0-9]{128}$/', $mpk) && !preg_match ('/^xpub[a-zA-Z0-9]{107}$/', $mpk))
 	    		{
-		    		$reason_message = __("Electrum Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
+		    		$reason_message = __("Electron Cash Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
 		    		$valid = false;
 		    	}
 		    	else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
 		    	{
-		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)! \nAlternatively you may choose another 'Bitcoin Service Provider' option.", 'woocommerce');
+		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)! \nAlternatively you may choose another 'Bitcoin Cash Service Provider' option.", 'woocommerce');
 		    		$valid = false;
 		    	}
 	    	}
@@ -304,7 +304,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 								'type' => 'text',
 								'css'     => $this->service_provider!='blockchain_info'?'display:none;':'',
 								'disabled' => $this->service_provider!='blockchain_info'?true:false,
-								'description' => $this->service_provider!='blockchain_info'?__('Available when Bitcoin service provider is set to: <b>Blockchain.info</b> (at BitcoinWay plugin settings page)', 'woocommerce'):__( 'Your own bitcoin address (such as: 18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj) - where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address by blockchain.info APIs.', 'woocommerce' ),
+								'description' => $this->service_provider!='blockchain_info'?__('Available when Bitcoin Cash service provider is set to: <b>Blockchain.info</b> (at BitcoinWay plugin settings page)', 'woocommerce'):__( 'Your own bitcoin address (such as: 18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj) - where you would like the payment to be sent. When customer sends you payment for the product - it will be automatically forwarded to this address by blockchain.info APIs.', 'woocommerce' ),
 								'default' => '',
 							),
 
@@ -515,12 +515,12 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 
 			if (!$bitcoins_address)
 			{
-				$msg = "ERROR: cannot generate bitcoin address for the order: '" . @$ret_info_array['message'] . "'";
+				$msg = "ERROR: cannot generate bitcoin cash address for the order: '" . @$ret_info_array['message'] . "'";
       			BWWC__log_event (__FILE__, __LINE__, $msg);
       			exit ('<h2 style="color:red;">' . $msg . '</h2>');
 			}
 
-   		BWWC__log_event (__FILE__, __LINE__, "     Generated unique bitcoin address: '{$bitcoins_address}' for order_id " . $order_id);
+   		BWWC__log_event (__FILE__, __LINE__, "     Generated unique bitcoin cash address: '{$bitcoins_address}' for order_id " . $order_id);
 
 			if ($this->service_provider == 'blockchain_info')
 			{
@@ -574,7 +574,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			//	Updating the order status:
 
 			// Mark as on-hold (we're awaiting for bitcoins payment to arrive)
-			$order->update_status('on-hold', __('Awaiting bitcoin payment to arrive', 'woocommerce'));
+			$order->update_status('on-hold', __('Awaiting bitcoin cash payment to arrive', 'woocommerce'));
 
 /*
 			///////////////////////////////////////
@@ -771,7 +771,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 				{
 					// Number of confirmations are not there yet... Skip it this time ...
 			    // Don't print *ok* so the notification resent again on next confirmation
-   				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment notification received (for BTC {$value_in_btc}), but number of confirmations is not enough yet. Confirmations received/required: {$confirmations}/{$this->confs_num}");
+   				BWWC__log_event (__FILE__, __LINE__, "NOTE: Payment notification received (for BCH {$value_in_btc}), but number of confirmations is not enough yet. Confirmations received/required: {$confirmations}/{$this->confs_num}");
 			    exit();
 				}
 			}
@@ -897,7 +897,7 @@ function BWWC__process_payment_completed_for_order ($order_id, $bitcoins_paid=fa
 		{
 			// Send email from admin to admin
 			BWWC__send_email ($email, $email, "Full payment received for order ID: '{$order_id}'",
-				"Order ID: '{$order_id}' paid in full. <br />Received BTC: '$bitcoins_paid'.<br />Please process and complete order for customer."
+				"Order ID: '{$order_id}' paid in full. <br />Received BCH: '$bitcoins_paid'.<br />Please process and complete order for customer."
 				);
 		}
 	}

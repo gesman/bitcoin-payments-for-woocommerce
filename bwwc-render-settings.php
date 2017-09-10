@@ -127,14 +127,14 @@ function BWWC__render_general_settings_page_html ()
         </tr>
 
         <tr valign="top">
-          <th scope="row">Bitcoin Service Provider:</th>
+          <th scope="row">Bitcoin Cash Service Provider:</th>
           <td>
             <select name="service_provider" class="select ">
               <option <?php if ($bwwc_settings['service_provider'] == 'electrum_wallet') echo 'selected="selected"'; ?> value="electrum_wallet">Your own Electron Cash wallet</option>
               <option <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') echo 'selected="selected"'; ?> value="blockchain_info">Blockchain.info API (DOES NOT WORK FOR BITCOIN CASH! use Electrum instead)</option>
             </select>
             <p class="description">
-              Please select your Bitcoin service provider and press [Save changes]. Then fill-in necessary details and press [Save changes] again.
+              Please select your Bitcoin Cash service provider and press [Save changes]. Then fill-in necessary details and press [Save changes] again.
               <br />Recommended setting: <b>Your own Electrum wallet</b>.
             </p>
           </td>
