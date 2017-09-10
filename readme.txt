@@ -9,7 +9,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
-Bitcoin Cash Payments for WooCommerce is a Wordpress plugin that allows to accept bitcoin cash at WooCommerce-powered online stores.
+Bitcoin Cash Payments for WooCommerce is a Wordpress plugin that allows you to accept bitcoin cash at WooCommerce-powered online stores.
 
 == Description ==
 
@@ -31,8 +31,9 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 == Installation ==
 
-1. Install "Bitcoin Cash Payments for WooCommerce" wordpress plugin just like any other Wordpress plugin.
-2. Activate.
+1. Clone the git repo or download the zip and extract.  Move 'bitcoin-cash-payments-for-woocommerce' dir to /wp-content/plugins/
+2. Install "Bitcoin Cash Payments for WooCommerce" plugin just like any other Wordpress plugin.
+3. Activate.
 
 
 == Screenshots ==
