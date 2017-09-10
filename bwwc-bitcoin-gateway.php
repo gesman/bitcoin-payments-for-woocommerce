@@ -134,7 +134,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 		    	}
 		    	else if (!extension_loaded('gmp') && !extension_loaded('bcmath'))
 		    	{
-		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electrum wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)! \nAlternatively you may choose another 'Bitcoin Cash Service Provider' option.", 'woocommerce');
+		    		$reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electron Cash wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)! \nAlternatively you may choose another 'Bitcoin Cash Service Provider' option.", 'woocommerce');
 		    		$valid = false;
 		    	}
 	    	}
@@ -500,7 +500,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 			}
 			else if ($this->service_provider == 'electrum_wallet')
 			{
-				// Generate bitcoin address for electrum wallet provider.
+				// Generate bitcoin address for electron cash wallet provider.
 				/*
             $ret_info_array = array (
                'result'                      => 'success', // OR 'error'

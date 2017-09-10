@@ -131,17 +131,17 @@ function BWWC__render_general_settings_page_html ()
           <td>
             <select name="service_provider" class="select ">
               <option <?php if ($bwwc_settings['service_provider'] == 'electrum_wallet') echo 'selected="selected"'; ?> value="electrum_wallet">Your own Electron Cash wallet</option>
-              <option <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') echo 'selected="selected"'; ?> value="blockchain_info">Blockchain.info API (DOES NOT WORK FOR BITCOIN CASH! use Electrum instead)</option>
+              <option <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') echo 'selected="selected"'; ?> value="blockchain_info">Blockchain.info API (DOES NOT WORK FOR BITCOIN CASH! use Electron Cash instead)</option>
             </select>
             <p class="description">
               Please select your Bitcoin Cash service provider and press [Save changes]. Then fill-in necessary details and press [Save changes] again.
-              <br />Recommended setting: <b>Your own Electrum wallet</b>.
+              <br />Recommended setting: <b>Your own Electron Cash wallet</b>.
             </p>
           </td>
         </tr>
 
         <tr valign="top">
-          <th scope="row">Electrum Master Public Key (MPK):</th>
+          <th scope="row">Electron Cash Master Public Key (MPK):</th>
           <td>
             <textarea style="width:75%;" name="electrum_mpk_saved"><?php echo $bwwc_settings['electrum_mpk_saved']; ?></textarea>
             <p class="description">
@@ -160,7 +160,7 @@ function BWWC__render_general_settings_page_html ()
                 </li>
                 <li>
                   Restart Electron Cash wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
-                  <br />If your online store receives lots of orders in bitcoins - you might need to set gap limit to even bigger value.
+                  <br />If your online store receives lots of orders in bitcoin cash - you might need to set gap limit to even bigger value.
                 </li>
               </ol>
             </p>
@@ -201,10 +201,10 @@ function BWWC__render_general_settings_page_html ()
           <td>
             <input type="text" name="exchange_multiplier" value="<?php echo $bwwc_settings['exchange_multiplier']; ?>" size="4" />
             <p class="description">
-              Extra multiplier to apply to convert store default currency to bitcoin price.
-              <br />Example: 1.05 - will add extra 5% to the total price in bitcoins.
-              May be useful to compensate for market volatility or for merchant's loss to fees when converting bitcoins to local currency,
-              or to encourage customer to use bitcoins for purchases (by setting multiplier to < 1.00 values).
+              Extra multiplier to apply to convert store default currency to bitcoin cash price.
+              <br />Example: 1.05 - will add extra 5% to the total price in bitcoin cash.
+              May be useful to compensate for market volatility or for merchant's loss to fees when converting bitcoin cash to local currency,
+              or to encourage customer to use bitcoin cash for purchases (by setting multiplier to < 1.00 values).
             </p>
           </td>
         </tr>
@@ -220,11 +220,11 @@ function BWWC__render_general_settings_page_html ()
 
 
               <p class="description">
-                <b>No</b> (default, recommended) - will allow to recycle bitcoin addresses that been generated for each placed order but never received any payments. The drawback of this approach is that potential snoop can generate many fake (never paid for) orders to discover sequence of bitcoin addresses that belongs to the wallet of this store and then track down sales through blockchain analysis. The advantage of this option is that it very efficiently reuses empty (zero-balance) bitcoin addresses within the wallet, allowing only 1 sale per address without growing the wallet size (Electrum "gap" value).
+                <b>No</b> (default, recommended) - will allow to recycle bitcoin cash addresses that been generated for each placed order but never received any payments. The drawback of this approach is that potential snoop can generate many fake (never paid for) orders to discover sequence of bitcoin cash addresses that belongs to the wallet of this store and then track down sales through blockchain analysis. The advantage of this option is that it very efficiently reuses empty (zero-balance) bitcoin cash addresses within the wallet, allowing only 1 sale per address without growing the wallet size (Electron Cash "gap" value).
                 <br />
-                <b>Yes</b> - ONLY AVAILABLE in legacy bitcoin plugin, not available for bitcoin cash fork at this time. This will guarantee to generate unique bitcoin address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the Electrum wallet much sooner).
-                <br />It is recommended to regenerate new wallet after number of used bitcoin addresses reaches 1000. Wallets with very high gap limits (>1000) are very slow to sync with blockchain and they put an extra load on the network. <br />
-                Extreme privacy mode offers the best anonymity and privacy to the store albeit with the drawbacks of potentially flooding your Electrum wallet with expired and zero-balance addresses. Hence, for vast majority of cases (where you just need a secure way to operate bitcoin based store) it is suggested to set this option to 'No').<br />
+                <b>Yes</b> - ONLY AVAILABLE in legacy bitcoin plugin, not available for bitcoin cash fork at this time. This will guarantee to generate unique bitcoin cash address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the Electron Cash wallet much sooner).
+                <br />It is recommended to regenerate new wallet after number of used bitcoin cash addresses reaches 1000. Wallets with very high gap limits (>1000) are very slow to sync with blockchain and they put an extra load on the network. <br />
+                Extreme privacy mode offers the best anonymity and privacy to the store albeit with the drawbacks of potentially flooding your Electron Cash wallet with expired and zero-balance addresses. Hence, for vast majority of cases (where you just need a secure way to operate bitcoin cash based store) it is suggested to set this option to 'No').<br />
                 <b>Note</b>: PRO version only available for original bitcoin payment plugin. not available for bitcoin cash.
               </p>
             </td>
@@ -256,10 +256,9 @@ function BWWC__render_general_settings_page_html ()
                 <b>Hard Cron</b>: - Cron job driven by the website hosting system/server (usually via CPanel). <br />
                 When enabling Hard Cron job - make this script to run every 5 minutes at your hosting panel cron job scheduler:<br />
                 <?php echo '<tt style="background-color:#FFA;color:#B00;padding:0px 6px;">wget -O /dev/null ' . $g_BWWC__cron_script_url . '?hardcron=1</tt>'; ?>
-                <br /><b style="color:red;">NOTE:</b> Cron jobs <b>might not work</b> if your site is password protected with HTTP Basic auth or other methods. This will result in WooCommerce store not seeing received payments (even though funds will arrive correctly to your bitcoin addresses).
+                <br /><b style="color:red;">NOTE:</b> Cron jobs <b>might not work</b> if your site is password protected with HTTP Basic auth or other methods. This will result in WooCommerce store not seeing received payments (even though funds will arrive correctly to your bitcoin cash addresses).
                 <br /><u>Note:</u> You will need to deactivate/reactivate plugin after changing this setting for it to have effect.<br />
-                "Hard" cron jobs may not be properly supported by all hosting plans (many shared hosting plans has restrictions in place).
-                <br />For secure, fast hosting service optimized for wordpress and 100% compatibility with WooCommerce and Bitcoin payments we recommend <b><a href="http://hostrum.com/" target="_blank">Hostrum Hosting</a></b>.
+                "Hard" cron jobs may not be properly supported by all hosting plans (many shared hosting plans has restrictions in place).               
               </p>
             </td>
         </tr>
@@ -285,7 +284,7 @@ function BWWC__render_advanced_settings_page_html ()
 
 
 <p style="text-align:center;"><?php echo BWWC__GetProLabel(); ?></p>
-<p><h3>Advanced Settings section gives you many more options to configure and optimize all aspects and functionality of your bitcoin store.</h3>
+<p><h3>Advanced Settings section gives you many more options to configure and optimize all aspects and functionality of your bitcoin cash store.</h3>
   Please note that the pro version of this plugin is only available to support legacy bitcoin and not bitcoin cash.  Do not purchase pro at this time if you intend to accept bitcoin cash payments.
   <a href="<?php echo BWWC__GetProUrl(); ?>"><b>Pro version</b></a>.
 </p>
