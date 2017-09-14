@@ -256,7 +256,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
     </td>
     <td class="bpit-td-value bpit-td-value-qr">
       <div style="border:1px solid #FCCA09;padding:5px;margin:2px;background-color:#FCF8E3;border-radius:4px;">
-        <a href="bitcoin://{{{BITCOINS_ADDRESS}}}?amount={{{BITCOINS_AMOUNT}}}"><img src="https://blockchain.info/qr?data=bitcoin://{{{BITCOINS_ADDRESS}}}?amount={{{BITCOINS_AMOUNT}}}&size=180" style="vertical-align:middle;border:1px solid #888;" /></a>
+        <a href="bitcoincash://{{{BITCOINS_ADDRESS}}}?amount={{{BITCOINS_AMOUNT}}}"><img src="http://api.qrserver.com/v1/create-qr-code/?color=000000&amp;bgcolor=FFFFFF&amp;data=bitcoincash%3A%2F%2F{{{BITCOINS_ADDRESS}}}%3Famount%3D{{{BITCOINS_AMOUNT}}}&amp;qzone=1&amp;margin=0&amp;size=180x180&amp;ecc=L" style="vertical-align:middle;border:1px solid #888;" /></a>
       </div>
     </td>
   </tr>
