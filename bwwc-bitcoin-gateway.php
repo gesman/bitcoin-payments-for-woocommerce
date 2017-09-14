@@ -42,7 +42,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway ()
 	     */
 		public function __construct()
 		{
-      $this->id				= 'bitcoin cash';
+      $this->id				= 'bitcoin';
       $this->icon 			= plugins_url('/images/bch_buyitnow_32x.png', __FILE__);	// 32 pixels high
       $this->has_fields 		= false;
       $this->method_title     = __( 'Bitcoin Cash', 'woocommerce' );
