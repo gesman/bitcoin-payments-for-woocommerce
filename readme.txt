@@ -51,7 +51,7 @@ This is still in Beta, some bugs may be encountered please open an issue.
 
 == Supporters ==
 
-* mboyd1:  hittps://bitcoincloud.net
+* mboyd1:  https://bitcoincloud.net
 * sanchaz: http://sanchaz.net
 * Yifu Guo: http://bitsyn.com/
 * Bitcoin Grants: http://bitcoingrant.org/
