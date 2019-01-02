@@ -1,46 +1,46 @@
-=== Bitcoin Cash Payments for WooCommerce ===
-Contributors: mboyd1, gesman, bitcoinway.com
-Donation address (bitcoin cash only): 18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj
-Tags: bitcoin cash, bitcoin cash wordpress plugin, bitcoin cash plugin, bitcoin cash payments, accept bitcoin cash, bch, bcc
+=== (BETA) Bitcoin SV Payments for WooCommerce ===
+Contributors: mboyd1, sanchaz, gesman, bitcoinway.com
+Tags: bitcoin sv, bitcoin sv wordpress plugin, bitcoin sv plugin, bitcoin sv payments, accept bitcoin sv, bsv, bchsv
 Requires at least: Wordpress 3.0.1
-Tested up to: Wordpress 4.8.1
+Tested up to: Wordpress 5.0.2
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
-Bitcoin Cash Payments for WooCommerce is a Wordpress plugin that allows you to accept bitcoin cash at WooCommerce-powered online stores.
+Bitcoin SV Payments for WooCommerce is a Wordpress plugin that allows you to accept Bitcoin SV at WooCommerce-powered online stores.
 
 == Description ==
 
 Your online store must use WooCommerce platform (free wordpress plugin).
-Once you installed and activated WooCommerce, you may install and activate Bitcoin Cash Payments for WooCommerce.
+Once you installed and activated WooCommerce, you may install and activate Bitcoin SV Payments for WooCommerce.
+
+This is still in Beta, some bugs may be encountered please open an issue.
 
 = Benefits =
 
 * Accept payment directly into your personal Electron Cash wallet.
 * Electron Cash wallet payment option completely removes dependency on any third party service and middlemen.
-* Accept payment in bitcoin cash for physical and digital downloadable products.
-* Add bitcoin cash  payments option to your existing online store with alternative main currency.
+* Accept payment in Bitcoin SV for physical and digital downloadable products.
+* Add Bitcoin SV  payments option to your existing online store with alternative main currency.
 * Flexible exchange rate calculations fully managed via administrative settings.
-* Zero fees and no commissions for bitcoin cash payments processing from any third party.
-* Set main currency of your store to USD or bitcoin cash.
-* Automatic conversion to bitcoin cash via realtime exchange rate feed and calculations.
+* Supports multiple currencies, including Bitcoin SV
+* Automatic conversion to Bitcoin SV via exchange rate feed and calculations.
 * Ability to set exchange rate calculation multiplier to compensate for any possible losses due to bank conversions and funds transfer fees.
 
 
 == Installation ==
 
-1. Clone the git repo or download the zip and extract.  Move 'bitcoin-cash-payments-for-woocommerce' dir to /wp-content/plugins/
-2. Install "Bitcoin Cash Payments for WooCommerce" plugin just like any other Wordpress plugin.
+1. Clone the git repo or download the zip and extract.  Move 'bitcoin-sv-payments-for-woocommerce' dir to /wp-content/plugins/
+2. Install "Bitcoin SV Payments for WooCommerce" plugin just like any other Wordpress plugin.
 3. Activate.
 
 
 == Screenshots ==
 
-1. Checkout with option for bitcoin cash payment.
-2. Order received screen, including QR code of bitcoin cash address and payment amount.
-3. Bitcoin Cash Gateway settings screen.
+1. Checkout with option for Bitcoin SV payment.
+2. Order received screen, including QR code of Bitcoin SV address and payment amount.
+3. Bitcoin SV Gateway settings screen.
 
 
 == Remove plugin ==
@@ -51,7 +51,8 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 == Supporters ==
 
-* mboyd1:  https://github.com/mboyd1
+* mboyd1:  hittps://bitcoincloud.net
+* sanchaz: http://sanchaz.net
 * Yifu Guo: http://bitsyn.com/
 * Bitcoin Grants: http://bitcoingrant.org/
 * Chris Savery: https://github.com/bkkcoins/misc
@@ -63,6 +64,37 @@ Once you installed and activated WooCommerce, you may install and activate Bitco
 
 
 == Changelog ==
+
+= 4.20 =
+* Bitcoin SV support. Use Weighted Average exchange rate calculation. Electron Cash version 3.3.2 is last compatible version with BSV.
+
+= 4.19 =
+* Rebase from sanchaz's fork, minus cashaddr
+
+= 4.18 =
+* Made the gateway payment icon selectable. (Adding new ones is possible by uploading it to /images/checkout-icons, make sure to scale the image to a height of 32px). Changed the defaut icon to a new orange icon.
+
+= 4.17 =
+* Hardcron behaviour now also happens if soft_cron is set and DISABLE_WP_CRON = true, ie the user is running it manually or through real cron
+* The template now features the amount after the address and a message.
+
+= 4.16 =
+* Added reuse_expired_addresses option in the menus for everyone
+
+= 4.15 =
+* Added exchange rate to order metadata
+
+= 4.14 =
+* Changed qr code to cashaddr. Only one qr is displayed to avoid clutter and encourage use of cashaddr.
+
+= 4.13 =
+* Added simple casdddr support. This means displays cashaddr on pay page, also adds it to the post metadata for easier search. (Does not use it to query apis, will be added later)
+* Fixed styling issues using php cs fixer v2 using PSR2 rules
+* Remove donation address and plea
+
+= 4.12 =
+* Fixed multiple currency.
+* Added new price provider.
 
 = 3.03 =
 * Forked original bitcoin payment plugin, modified for Bitcoin Cash.  Supports Electron Cash wallet's Master Public Key

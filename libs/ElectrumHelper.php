@@ -1,15 +1,13 @@
 <?php
 
 // To fix problem with earlier PHP versions not supporting hex2bin
-if ( !function_exists( 'hex2bin' ) )
-{
-    function hex2bin( $str )
+if (!function_exists('hex2bin')) {
+    function hex2bin($str)
     {
         $sbin = "";
-        $len = strlen( $str );
-        for ( $i = 0; $i < $len; $i += 2 )
-        {
-            $sbin .= pack( "H*", substr( $str, $i, 2 ) );
+        $len = strlen($str);
+        for ($i = 0; $i < $len; $i += 2) {
+            $sbin .= pack("H*", substr($str, $i, 2));
         }
 
         return $sbin;
@@ -23,21 +21,21 @@ class ElectrumHelper
     const V1 = 1;
     const V2 = 2;
 
-    public static function mpk_to_bc_address($mpk, $index, $version, $is_for_change = false) {
+    public static function mpk_to_bc_address($mpk, $index, $version, $is_for_change = false)
+    {
         if ($version == self::V1) {
             $pubkey = self::mpkV1_to_pubkey($mpk, $index);
-        }
-        elseif ($version == self::V2) {
+        } elseif ($version == self::V2) {
             $pubkey = self::mpkV2_to_pubkey($mpk, $index, $is_for_change);
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown Electrum version");
         }
 
         return self::pubkey_to_bc_address($pubkey);
     }
 
-    public static function mpkV1_to_pubkey($mpk, $index) {
+    public static function mpkV1_to_pubkey($mpk, $index)
+    {
         if ($mpk[0] === 'x') {
             throw new ErrorException("mpkV2 sent to mpkV1 function");
         }
@@ -49,29 +47,28 @@ class ElectrumHelper
         if (USE_EXT == 'GMP') {
             $x = gmp_Utils::gmp_hexdec('0x' . substr($mpk, 0, 64));
             $y = gmp_Utils::gmp_hexdec('0x' . substr($mpk, 64, 64));
-            $z = gmp_Utils::gmp_hexdec('0x' . hash('sha256', hash('sha256', $index . ':0:' . pack('H*', $mpk), TRUE)));
+            $z = gmp_Utils::gmp_hexdec('0x' . hash('sha256', hash('sha256', $index . ':0:' . pack('H*', $mpk), true)));
 
             $pt = Point::add(new Point($curve, $x, $y), Point::mul($z, $gen));
 
             $keystr = "\x04" . str_pad(gmp_Utils::gmp_dec2base($pt->getX(), 256), 32, "\x0", STR_PAD_LEFT) . str_pad(gmp_Utils::gmp_dec2base($pt->getY(), 256), 32, "\x0", STR_PAD_LEFT);
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             $x = bcmath_Utils::bchexdec('0x' . substr($mpk, 0, 64));
             $y = bcmath_Utils::bchexdec('0x' . substr($mpk, 64, 64));
-            $z = bcmath_Utils::bchexdec('0x' . hash('sha256', hash('sha256', $index . ':0:' . pack('H*', $mpk), TRUE)));
+            $z = bcmath_Utils::bchexdec('0x' . hash('sha256', hash('sha256', $index . ':0:' . pack('H*', $mpk), true)));
 
             $pt = Point::add(new Point($curve, $x, $y), Point::mul($z, $gen));
 
             $keystr = "\x04" . str_pad(bcmath_Utils::dec2base($pt->getX(), 256), 32, "\x0", STR_PAD_LEFT) . str_pad(bcmath_Utils::dec2base($pt->getY(), 256), 32, "\x0", STR_PAD_LEFT);
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
         return bin2hex($keystr);
     }
 
-    public static function mpkV2_to_pubkey($mpk, $index, $is_for_change = false) {
+    public static function mpkV2_to_pubkey($mpk, $index, $is_for_change = false)
+    {
         /**
          * A simple check if versions were confused. mpkV2 always starts with xpub.
          * If something would change in the future, consider removing this check.
@@ -88,7 +85,8 @@ class ElectrumHelper
         return bin2hex($key);
     }
 
-    public static function ckd_mpk_check($key, $code, $n) {
+    public static function ckd_mpk_check($key, $code, $n)
+    {
         if (USE_EXT === 'GMP') {
             if (gmp_cmp(strval($n), '0') < 0) {
                 throw new ErrorException("Negative index (master private key needed)");
@@ -97,8 +95,7 @@ class ElectrumHelper
             if (gmp_cmp(strval($n), strval(self::BIP32_PRIME)) >= 0) {
                 throw new ErrorException("Index is too big");
             }
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             if (bccomp(strval($n), '0') < 0) {
                 throw new ErrorException("Negative index (master private key needed)");
             }
@@ -106,8 +103,7 @@ class ElectrumHelper
             if (bccomp(strval($n), strval(self::BIP32_PRIME)) >= 0) {
                 throw new ErrorException("Index is too big");
             }
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
@@ -127,14 +123,12 @@ class ElectrumHelper
                 Point::mul(gmp_Utils::gmp_base2dec(substr($keystr, 0, 32), 256), $gen),
                 self::ser_to_point($key, $curve, $gen)
             );
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             $pubkey_point = Point::add(
                 Point::mul(bcmath_Utils::base2dec(substr($keystr, 0, 32), 256), $gen),
                 self::ser_to_point($key, $curve, $gen)
             );
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
@@ -150,29 +144,23 @@ class ElectrumHelper
             if ($compressed) {
                 if (gmp_strval(gmp_and($point->getY(), '1'))) {
                     $key = '03' . self::int_to_hex_pad($point->getX(), 32);
-                }
-                else {
+                } else {
                     $key = '02' . self::int_to_hex_pad($point->getX(), 32);
                 }
-            }
-            else {
+            } else {
                 $key = '04' . self::int_to_hex_pad($point->getX(), 32) . self::int_to_hex_pad($point->getY(), 32);
             }
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             if ($compressed) {
                 if (bcmod($point->getY(), '2')) {
                     $key = '03' . self::int_to_hex_pad($point->getX(), 32);
-                }
-                else {
+                } else {
                     $key = '02' . self::int_to_hex_pad($point->getX(), 32);
                 }
-            }
-            else {
+            } else {
                 $key = '04' . self::int_to_hex_pad($point->getX(), 32) . self::int_to_hex_pad($point->getY(), 32);
             }
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
@@ -198,8 +186,7 @@ class ElectrumHelper
             }
 
             $Mx = gmp_Utils::gmp_base2dec(substr($key, 1), 256);
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             if ($key[0] === "\x04") {
                 return new Point(
                     $curve,
@@ -210,15 +197,15 @@ class ElectrumHelper
             }
 
             $Mx = bcmath_Utils::base2dec(substr($key, 1), 256);
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
         return new Point($curve, $Mx, self::ECC_YfromX($Mx, $curve, $key[0] === "\x03"), $order);
     }
 
-    public static function ECC_YfromX($x, CurveFp $curve, $odd = true) {
+    public static function ECC_YfromX($x, CurveFp $curve, $odd = true)
+    {
         $p = $curve->getPrime();
         $a = $curve->getA();
         $b = $curve->getB();
@@ -237,8 +224,7 @@ class ElectrumHelper
                     return gmp_sub($p, $My);
                 }
             }
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             for ($offset = 0; $offset < 128; ++$offset) {
                 $Mx = bcadd($x, strval($offset));
                 $My2 = bcadd(bcadd(bcpowmod($Mx, '3', $p), $a * bcpowmod($Mx, '2', $p)), bcmod($b, $p));
@@ -252,13 +238,13 @@ class ElectrumHelper
                     return bcsub($p, $My);
                 }
             }
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
     }
 
-    public static function deserialize_mpk($mpk) {
+    public static function deserialize_mpk($mpk)
+    {
         $mpk = self::base58_decode_check($mpk);
 
         if (strlen($mpk) != 78) {
@@ -275,7 +261,8 @@ class ElectrumHelper
         return array($code, $key);
     }
 
-    public static function base58_decode_check($input) {
+    public static function base58_decode_check($input)
+    {
         $output = self::base58_decode($input);
         $key = substr($output, 0, -4);
         $csum = substr($output, -4);
@@ -285,13 +272,13 @@ class ElectrumHelper
 
         if ($cs32 !== $csum) {
             return "";
-        }
-        else {
+        } else {
             return $key;
         }
     }
 
-    public static function base58_decode($input) {
+    public static function base58_decode($input)
+    {
         $alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
         $base = '58';
 
@@ -302,27 +289,24 @@ class ElectrumHelper
             }
 
             return gmp_Utils::gmp_dec2base(gmp_strval($num), 256);
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             for ($i = strlen($input) - 1, $j = "1"; $i >= 0; $i--, $j = bcmul($j, $base)) {
                 $num = bcadd($num, bcmul($j, strval(strpos($alphabet, $input[$i]))));
             }
 
             return bcmath_Utils::dec2base($num, 256);
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
     }
 
-    public static function int_to_hex_pad($int, $pad) {
+    public static function int_to_hex_pad($int, $pad)
+    {
         if (USE_EXT === 'GMP') {
             $hex = gmp_Utils::gmp_dec2base($int, 16);
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             $hex = bcmath_Utils::dec2base($int, 16);
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
@@ -331,15 +315,18 @@ class ElectrumHelper
         return $hex;
     }
 
-    public static function hash_160($input) {
+    public static function hash_160($input)
+    {
         return hash("ripemd160", hash("sha256", $input, true), true);
     }
 
-    public static function hash_hash($input) {
+    public static function hash_hash($input)
+    {
         return hash("sha256", hash("sha256", $input, true), true);
     }
 
-    public static function base58_encode($input) {
+    public static function base58_encode($input)
+    {
         $alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
         $base = '58';
 
@@ -352,8 +339,7 @@ class ElectrumHelper
                 $encoded = $alphabet[intval($mod)] . $encoded;
                 $num = $div;
             }
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             $num = bcmath_Utils::base2dec($input, 256);
             while (intval($num) >= $base) {
                 $div = bcdiv($num, $base);
@@ -361,25 +347,27 @@ class ElectrumHelper
                 $encoded = $alphabet[intval($mod)] . $encoded;
                 $num = $div;
             }
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
 
         $encoded = $alphabet[intval($num)] . $encoded;
         $pad = '';
         $n = 0;
-        while ($input[$n++] === "\x0")
+        while ($input[$n++] === "\x0") {
             $pad .= '1';
+        }
 
         return $pad . $encoded;
     }
 
-    public static function pubkey_to_bc_address($pubkey) {
+    public static function pubkey_to_bc_address($pubkey)
+    {
         return self::hash_160_to_bc_address(self::hash_160(hex2bin($pubkey)));
     }
 
-    public static function hash_160_to_bc_address($h160, $addrtype = 0) {
+    public static function hash_160_to_bc_address($h160, $addrtype = 0)
+    {
         $vh160 = chr($addrtype) . $h160;
         $h = self::hash_hash($vh160);
         $addr = $vh160 . substr($h, 0, 4);
@@ -387,7 +375,8 @@ class ElectrumHelper
         return self::base58_encode($addr);
     }
 
-    public static function secp256k1_params() {
+    public static function secp256k1_params()
+    {
         if (USE_EXT === 'GMP') {
             return array(
                 'p' => gmp_Utils::gmp_hexdec('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'),
@@ -397,8 +386,7 @@ class ElectrumHelper
                 'x' => gmp_Utils::gmp_hexdec("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"),
                 'y' => gmp_Utils::gmp_hexdec("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8")
             );
-        }
-        elseif (USE_EXT === 'BCMATH') {
+        } elseif (USE_EXT === 'BCMATH') {
             return array(
                 'p' => bcmath_Utils::bchexdec('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F'),
                 'a' => bcmath_Utils::bchexdec('0x0000000000000000000000000000000000000000000000000000000000000000'),
@@ -407,8 +395,7 @@ class ElectrumHelper
                 'x' => bcmath_Utils::bchexdec("0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798"),
                 'y' => bcmath_Utils::bchexdec("0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8")
             );
-        }
-        else {
+        } else {
             throw new ErrorException("Unknown math module");
         }
     }

@@ -64,14 +64,16 @@ class gmp_Utils
         }
     }
 
-    public static function gmp_dec2base($dec, $base, $digits = FALSE)
+    public static function gmp_dec2base($dec, $base, $digits = false)
     {
         if (extension_loaded('gmp')) {
-            if ($base < 2 or $base > 256)
+            if ($base < 2 or $base > 256) {
                 die("Invalid Base: " . $base);
+            }
             $value = "";
-            if (!$digits)
+            if (!$digits) {
                 $digits = self::digits($base);
+            }
             $dec = gmp_init($dec);
             $base = gmp_init($base);
             while (gmp_cmp($dec, gmp_sub($base, '1')) > 0) {
@@ -86,15 +88,18 @@ class gmp_Utils
         }
     }
 
-    public static function gmp_base2dec($value, $base, $digits = FALSE)
+    public static function gmp_base2dec($value, $base, $digits = false)
     {
         if (extension_loaded('gmp')) {
-            if ($base < 2 or $base > 256)
+            if ($base < 2 or $base > 256) {
                 die("Invalid Base: " . $base);
-            if ($base < 37)
+            }
+            if ($base < 37) {
                 $value = strtolower($value);
-            if (!$digits)
+            }
+            if (!$digits) {
                 $digits = self::digits($base);
+            }
             $size = strlen($value);
             $dec = "0";
             for ($loop = 0; $loop < $size; $loop++) {
