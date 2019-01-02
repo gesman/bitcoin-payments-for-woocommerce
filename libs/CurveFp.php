@@ -55,7 +55,7 @@ class CurveFp
             } else {
                 return false;
             }
-        } else if (extension_loaded('bcmath') && USE_EXT == 'BCMATH') {
+        } elseif (extension_loaded('bcmath') && USE_EXT == 'BCMATH') {
             $eq_zero = bccomp(bcmod(bcsub(bcpow($y, 2), bcadd(bcadd(bcpow($x, 3), bcmul($this->a, $x)), $this->b)), $this->prime), 0);
 
             if ($eq_zero == 0) {
@@ -88,13 +88,12 @@ class CurveFp
         $same = null;
 
         if (extension_loaded('gmp') && USE_EXT == 'GMP') {
-
             if (gmp_cmp($cp1->a, $cp2->a) == 0 && gmp_cmp($cp1->b, $cp2->b) == 0 && gmp_cmp($cp1->prime, $cp2->prime) == 0) {
                 return 0;
             } else {
                 return 1;
             }
-        } else if (extension_loaded('bcmath') && USE_EXT == 'BCMATH') {
+        } elseif (extension_loaded('bcmath') && USE_EXT == 'BCMATH') {
             if (bccomp($cp1->a, $cp2->a) == 0 && bccomp($cp1->b, $cp2->b) == 0 && bccomp($cp1->prime, $cp2->prime) == 0) {
                 return 0;
             } else {
@@ -104,7 +103,4 @@ class CurveFp
             throw new ErrorException("Please install BCMATH or GMP");
         }
     }
-
 }
-
-?>

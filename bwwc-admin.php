@@ -1,17 +1,17 @@
 <?php
 /*
-Bitcoin Cash Payments for WooCommerce
-https://github.com/mboyd1/bitcoin-cash-payments-for-woocommerce
+Bitcoin SV Payments for WooCommerce
+https://github.com/mboyd1/bitcoin-sv-payments-for-woocommerce
 */
 
 // Include everything
-include (dirname(__FILE__) . '/bwwc-include-all.php');
+include(dirname(__FILE__) . '/bwwc-include-all.php');
 
 //===========================================================================
 // Global vars.
 
 global $g_BWWC__plugin_directory_url;
-$g_BWWC__plugin_directory_url = plugins_url ('', __FILE__);
+$g_BWWC__plugin_directory_url = plugins_url('', __FILE__);
 
 global $g_BWWC__cron_script_url;
 $g_BWWC__cron_script_url = $g_BWWC__plugin_directory_url . '/bwwc-cron.php';
@@ -21,7 +21,7 @@ $g_BWWC__cron_script_url = $g_BWWC__plugin_directory_url . '/bwwc-cron.php';
 //===========================================================================
 // Global default settings
 global $g_BWWC__config_defaults;
-$g_BWWC__config_defaults = array (
+$g_BWWC__config_defaults = array(
 
    // ------- Hidden constants
 // 'supported_currencies_arr'             =>  array ('USD', 'AUD', 'CAD', 'CHF', 'CNY', 'DKK', 'EUR', 'GBP', 'HKD', 'JPY', 'NZD', 'PLN', 'RUB', 'SEK', 'SGD', 'THB'), // Not used right now.
@@ -59,6 +59,11 @@ $g_BWWC__config_defaults = array (
    'autocomplete_paid_orders'							=>  '1',
    'enable_soft_cron_job'                 =>  '1',    // Enable "soft" Wordpress-driven cron jobs.
 
+    // New BSV settings
+    'selected_checkout_icon'               =>  '/images/checkout-icons/orange-1.png',
+    //'checkout_icon_select'                 =>  '',
+    ////////
+
    // ------- Copy of $this->settings of 'BWWC_Bitcoin' class.
    // DEPRECATED (only blockchain.info related settings still remain there.)
    'gateway_settings'                     =>  array('confirmations' => 6),
@@ -71,243 +76,244 @@ $g_BWWC__config_defaults = array (
 //===========================================================================
 function BWWC__GetPluginNameVersionEdition($please_donate = true)
 {
-  $return_data = '<h2 style="border-bottom:1px solid #DDD;padding-bottom:10px;margin-bottom:20px;">' .
+    $return_data = '<h2 style="border-bottom:1px solid #DDD;padding-bottom:10px;margin-bottom:20px;">' .
             BWWC_PLUGIN_NAME . ', version: <span style="color:#EE0000;">' .
             BWWC_VERSION. '</span> [<span style="color:#EE0000;background-color:#FFFF77;">&nbsp;' .
             BWWC_EDITION . '&nbsp;</span> edition]' .
           '</h2>';
 
-
-  if ($please_donate)
-  {
-    $return_data .= '<p style="border:1px solid #890e4e;padding:5px 10px;color:#004400;background-color:#FFF;"><u>Please donate Bitcoin Cash to</u>:&nbsp;&nbsp;<span style="color:#d21577;font-size:110%;font-weight:bold;">18vzABPyVbbia8TDCKDtXJYXcoAFAPk2cj</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>';
-  }
-
-  return $return_data;
+    return $return_data;
 }
 //===========================================================================
 
 //===========================================================================
-function BWWC__GetProUrl() { return 'http://google.com'; }
+function BWWC__GetProUrl()
+{
+    return 'http://google.com';
+}
 function BWWC__GetProLabel()
 {
-   return '<span style="background-color:#FF4;color:#F44;border:1px solid #F44;padding:2px 6px;font-family:\'Open Sans\',sans-serif;font-size:14px;border-radius:6px;"><a href="' . BWWC__GetProUrl() . '">PRO Only</a></span>';
+    return '<span style="background-color:#FF4;color:#F44;border:1px solid #F44;padding:2px 6px;font-family:\'Open Sans\',sans-serif;font-size:14px;border-radius:6px;"><a href="' . BWWC__GetProUrl() . '">PRO Only</a></span>';
 }
 //===========================================================================
 
 //===========================================================================
 // These are coming from plugin-specific table.
-function BWWC__get_persistent_settings ($key=false)
+function BWWC__get_persistent_settings($key=false)
 {
-////// PERSISTENT SETTINGS CURRENTLY UNUSED
-return array();
-//////
-  global $wpdb;
-
-  $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
-  $sql_query = "SELECT * FROM `$persistent_settings_table_name` WHERE `id` = '1';";
-
-  $row = $wpdb->get_row($sql_query, ARRAY_A);
-  if ($row)
-  {
-    $settings = @unserialize($row['settings']);
-    if ($key)
-      return $settings[$key];
-    else
-      return $settings;
-  }
-  else
+    ////// PERSISTENT SETTINGS CURRENTLY UNUSED
     return array();
+    //////
+    global $wpdb;
+
+    $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
+    $sql_query = "SELECT * FROM `$persistent_settings_table_name` WHERE `id` = '1';";
+
+    $row = $wpdb->get_row($sql_query, ARRAY_A);
+    if ($row) {
+        $settings = @unserialize($row['settings']);
+        if ($key) {
+            return $settings[$key];
+        } else {
+            return $settings;
+        }
+    } else {
+        return array();
+    }
 }
 //===========================================================================
 
 //===========================================================================
-function BWWC__update_persistent_settings ($bwwc_use_these_settings_array=false)
+function BWWC__update_persistent_settings($bwwc_use_these_settings_array=false)
 {
-////// PERSISTENT SETTINGS CURRENTLY UNUSED
-return;
-//////
-  global $wpdb;
+    ////// PERSISTENT SETTINGS CURRENTLY UNUSED
+    return;
+    //////
+    global $wpdb;
 
-  $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
+    $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
 
-  if (!$bwwc_use_these_settings)
-    $bwwc_use_these_settings = array();
+    if (!$bwwc_use_these_settings) {
+        $bwwc_use_these_settings = array();
+    }
 
-  $db_ready_settings = BWWC__safe_string_escape (serialize($bwwc_use_these_settings_array));
+    $db_ready_settings = BWWC__safe_string_escape(serialize($bwwc_use_these_settings_array));
 
-  $wpdb->update($persistent_settings_table_name, array('settings' => $db_ready_settings), array('id' => '1'), array('%s'));
+    $wpdb->update($persistent_settings_table_name, array('settings' => $db_ready_settings), array('id' => '1'), array('%s'));
 }
 //===========================================================================
 
 //===========================================================================
 // Wipe existing table's contents and recreate first record with all defaults.
-function BWWC__reset_all_persistent_settings ()
+function BWWC__reset_all_persistent_settings()
 {
-////// PERSISTENT SETTINGS CURRENTLY UNUSED
-return;
-//////
+    ////// PERSISTENT SETTINGS CURRENTLY UNUSED
+    return;
+    //////
 
-  global $wpdb;
-  global $g_BWWC__config_defaults;
+    global $wpdb;
+    global $g_BWWC__config_defaults;
 
-  $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
+    $persistent_settings_table_name = $wpdb->prefix . 'bwwc_persistent_settings';
 
-  $initial_settings = BWWC__safe_string_escape (serialize($g_BWWC__config_defaults));
+    $initial_settings = BWWC__safe_string_escape(serialize($g_BWWC__config_defaults));
 
-  $query = "TRUNCATE TABLE `$persistent_settings_table_name`;";
-  $wpdb->query ($query);
+    $query = "TRUNCATE TABLE `$persistent_settings_table_name`;";
+    $wpdb->query($query);
 
-  $query = "INSERT INTO `$persistent_settings_table_name`
+    $query = "INSERT INTO `$persistent_settings_table_name`
       (`id`, `settings`)
         VALUES
       ('1', '$initial_settings');";
-  $wpdb->query ($query);
+    $wpdb->query($query);
 }
 //===========================================================================
 
 //===========================================================================
-function BWWC__get_settings ($key=false)
+function BWWC__get_settings($key=false)
 {
-  global   $g_BWWC__plugin_directory_url;
-  global   $g_BWWC__config_defaults;
+    global   $g_BWWC__plugin_directory_url;
+    global   $g_BWWC__config_defaults;
 
-  $bwwc_settings = get_option (BWWC_SETTINGS_NAME);
-  if (!is_array($bwwc_settings))
-    $bwwc_settings = array();
+    $bwwc_settings = get_option(BWWC_SETTINGS_NAME);
+    if (!is_array($bwwc_settings)) {
+        $bwwc_settings = array();
+    }
 
 
-  if ($key)
-    return (@$bwwc_settings[$key]);
-  else
-    return ($bwwc_settings);
+    if ($key) {
+        return (@$bwwc_settings[$key]);
+    } else {
+        return ($bwwc_settings);
+    }
 }
 //===========================================================================
 
 //===========================================================================
-function BWWC__update_settings ($bwwc_use_these_settings=false, $also_update_persistent_settings=false)
+function BWWC__update_settings($bwwc_use_these_settings=false, $also_update_persistent_settings=false)
 {
-   if ($bwwc_use_these_settings)
-      {
-      if ($also_update_persistent_settings)
-        BWWC__update_persistent_settings ($bwwc_use_these_settings);
+    if ($bwwc_use_these_settings) {
+        if ($also_update_persistent_settings) {
+            BWWC__update_persistent_settings($bwwc_use_these_settings);
+        }
 
-      update_option (BWWC_SETTINGS_NAME, $bwwc_use_these_settings);
-      return;
-      }
+        update_option(BWWC_SETTINGS_NAME, $bwwc_use_these_settings);
+        return;
+    }
 
-   global   $g_BWWC__config_defaults;
+    global   $g_BWWC__config_defaults;
 
-   // Load current settings and overwrite them with whatever values are present on submitted form
-   $bwwc_settings = BWWC__get_settings();
+    // Load current settings and overwrite them with whatever values are present on submitted form
+    $bwwc_settings = BWWC__get_settings();
 
-   foreach ($g_BWWC__config_defaults as $k=>$v)
-      {
-      if (isset($_POST[$k]))
-         {
-         if (!isset($bwwc_settings[$k]))
-            $bwwc_settings[$k] = ""; // Force set to something.
-         BWWC__update_individual_bwwc_setting ($bwwc_settings[$k], $_POST[$k]);
-         }
-      // If not in POST - existing will be used.
-      }
+    foreach ($g_BWWC__config_defaults as $k=>$v) {
+        if (isset($_POST[$k])) {
+            if (!isset($bwwc_settings[$k])) {
+                $bwwc_settings[$k] = "";
+            } // Force set to something.
+            BWWC__update_individual_bwwc_setting($bwwc_settings[$k], $_POST[$k]);
+        }
+        // If not in POST - existing will be used.
+    }
 
-   //---------------------------------------
-   // Validation
-   //if ($bwwc_settings['aff_payout_percents3'] > 90)
-   //   $bwwc_settings['aff_payout_percents3'] = "90";
-   //---------------------------------------
+    //---------------------------------------
+    // Validation
+    //if ($bwwc_settings['aff_payout_percents3'] > 90)
+    //   $bwwc_settings['aff_payout_percents3'] = "90";
+    //---------------------------------------
 
-  // ---------------------------------------
-  // Post-process variables.
+    // ---------------------------------------
+    // Post-process variables.
 
-  // Array of MPK's. Single MPK = element with idx=0
-  $bwwc_settings['electrum_mpks'] = preg_split("/[\s,]+/", $bwwc_settings['electrum_mpk_saved']);
-  // ---------------------------------------
+    // Array of MPK's. Single MPK = element with idx=0
+    $bwwc_settings['electrum_mpks'] = preg_split("/[\s,]+/", $bwwc_settings['electrum_mpk_saved']);
+    // ---------------------------------------
 
 
-  if ($also_update_persistent_settings)
-    BWWC__update_persistent_settings ($bwwc_settings);
+    if ($also_update_persistent_settings) {
+        BWWC__update_persistent_settings($bwwc_settings);
+    }
 
-  update_option (BWWC_SETTINGS_NAME, $bwwc_settings);
+    update_option(BWWC_SETTINGS_NAME, $bwwc_settings);
 }
 //===========================================================================
 
 //===========================================================================
 // Takes care of recursive updating
-function BWWC__update_individual_bwwc_setting (&$bwwc_current_setting, $bwwc_new_setting)
+function BWWC__update_individual_bwwc_setting(&$bwwc_current_setting, $bwwc_new_setting)
 {
-   if (is_string($bwwc_new_setting))
-      $bwwc_current_setting = BWWC__stripslashes ($bwwc_new_setting);
-   else if (is_array($bwwc_new_setting))  // Note: new setting may not exist yet in current setting: curr[t5] - not set yet, while new[t5] set.
-      {
+    if (is_string($bwwc_new_setting)) {
+        $bwwc_current_setting = BWWC__stripslashes($bwwc_new_setting);
+    } elseif (is_array($bwwc_new_setting)) {  // Note: new setting may not exist yet in current setting: curr[t5] - not set yet, while new[t5] set.
       // Need to do recursive
-      foreach ($bwwc_new_setting as $k=>$v)
-         {
-         if (!isset($bwwc_current_setting[$k]))
-            $bwwc_current_setting[$k] = "";   // If not set yet - force set it to something.
-         BWWC__update_individual_bwwc_setting ($bwwc_current_setting[$k], $v);
-         }
-      }
-   else
-      $bwwc_current_setting = $bwwc_new_setting;
+        foreach ($bwwc_new_setting as $k=>$v) {
+            if (!isset($bwwc_current_setting[$k])) {
+                $bwwc_current_setting[$k] = "";
+            }   // If not set yet - force set it to something.
+            BWWC__update_individual_bwwc_setting($bwwc_current_setting[$k], $v);
+        }
+    } else {
+        $bwwc_current_setting = $bwwc_new_setting;
+    }
 }
 //===========================================================================
 
 //===========================================================================
 //
 // Reset settings only for one screen
-function BWWC__reset_partial_settings ($also_reset_persistent_settings=false)
+function BWWC__reset_partial_settings($also_reset_persistent_settings=false)
 {
-   global   $g_BWWC__config_defaults;
+    global   $g_BWWC__config_defaults;
 
-   // Load current settings and overwrite ones that are present on submitted form with defaults
-   $bwwc_settings = BWWC__get_settings();
+    // Load current settings and overwrite ones that are present on submitted form with defaults
+    $bwwc_settings = BWWC__get_settings();
 
-   foreach ($_POST as $k=>$v)
-      {
-      if (isset($g_BWWC__config_defaults[$k]))
-         {
-         if (!isset($bwwc_settings[$k]))
-            $bwwc_settings[$k] = ""; // Force set to something.
-         BWWC__update_individual_bwwc_setting ($bwwc_settings[$k], $g_BWWC__config_defaults[$k]);
-         }
-      }
+    foreach ($_POST as $k=>$v) {
+        if (isset($g_BWWC__config_defaults[$k])) {
+            if (!isset($bwwc_settings[$k])) {
+                $bwwc_settings[$k] = "";
+            } // Force set to something.
+            BWWC__update_individual_bwwc_setting($bwwc_settings[$k], $g_BWWC__config_defaults[$k]);
+        }
+    }
 
-  update_option (BWWC_SETTINGS_NAME, $bwwc_settings);
+    update_option(BWWC_SETTINGS_NAME, $bwwc_settings);
 
-  if ($also_reset_persistent_settings)
-    BWWC__update_persistent_settings ($bwwc_settings);
+    if ($also_reset_persistent_settings) {
+        BWWC__update_persistent_settings($bwwc_settings);
+    }
 }
 //===========================================================================
 
 //===========================================================================
-function BWWC__reset_all_settings ($also_reset_persistent_settings=false)
+function BWWC__reset_all_settings($also_reset_persistent_settings=false)
 {
-  global   $g_BWWC__config_defaults;
+    global   $g_BWWC__config_defaults;
 
-  update_option (BWWC_SETTINGS_NAME, $g_BWWC__config_defaults);
+    update_option(BWWC_SETTINGS_NAME, $g_BWWC__config_defaults);
 
-  if ($also_reset_persistent_settings)
-    BWWC__reset_all_persistent_settings ();
+    if ($also_reset_persistent_settings) {
+        BWWC__reset_all_persistent_settings();
+    }
 }
 //===========================================================================
 
 //===========================================================================
 // Recursively strip slashes from all elements of multi-nested array
-function BWWC__stripslashes (&$val)
+function BWWC__stripslashes(&$val)
 {
-   if (is_string($val))
-      return (stripslashes($val));
-   if (!is_array($val))
-      return $val;
+    if (is_string($val)) {
+        return (stripslashes($val));
+    }
+    if (!is_array($val)) {
+        return $val;
+    }
 
-   foreach ($val as $k=>$v)
-      {
-      $val[$k] = BWWC__stripslashes ($v);
-      }
+    foreach ($val as $k=>$v) {
+        $val[$k] = BWWC__stripslashes($v);
+    }
 
-   return $val;
+    return $val;
 }
 //===========================================================================
 
@@ -323,41 +329,42 @@ function BWWC__stripslashes (&$val)
                             "xused"       - address was used (touched with funds) by unknown entity outside of this application. No metadata is present for this address, will not be able to correlated it with any order.
                             "unknown"     - new address was generated but cannot retrieve balance due to blockchain API failure.
 */
-function BWWC__create_database_tables ($bwwc_settings)
+function BWWC__create_database_tables($bwwc_settings)
 {
-  global $wpdb;
+    global $wpdb;
 
-  $bwwc_settings = BWWC__get_settings();
-  $must_update_settings = false;
+    $bwwc_settings = BWWC__get_settings();
+    $must_update_settings = false;
 
-  ///$persistent_settings_table_name       = $wpdb->prefix . 'bwwc_persistent_settings';
-  ///$electrum_wallets_table_name          = $wpdb->prefix . 'bwwc_electrum_wallets';
-  $btc_addresses_table_name             = $wpdb->prefix . 'bwwc_btc_addresses';
+    ///$persistent_settings_table_name       = $wpdb->prefix . 'bwwc_persistent_settings';
+    ///$electrum_wallets_table_name          = $wpdb->prefix . 'bwwc_electrum_wallets';
+    $btc_addresses_table_name             = $wpdb->prefix . 'bwwc_btc_addresses';
 
-  if($wpdb->get_var("SHOW TABLES LIKE '$btc_addresses_table_name'") != $btc_addresses_table_name)
-      $b_first_time = true;
-  else
-      $b_first_time = false;
+    if ($wpdb->get_var("SHOW TABLES LIKE '$btc_addresses_table_name'") != $btc_addresses_table_name) {
+        $b_first_time = true;
+    } else {
+        $b_first_time = false;
+    }
 
- //----------------------------------------------------------
- // Create tables
-  /// NOT NEEDED YET
-  /// $query = "CREATE TABLE IF NOT EXISTS `$persistent_settings_table_name` (
-  ///   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  ///   `settings` text,
-  ///   PRIMARY KEY  (`id`)
-  ///   );";
-  /// $wpdb->query ($query);
+    //----------------------------------------------------------
+    // Create tables
+    /// NOT NEEDED YET
+    /// $query = "CREATE TABLE IF NOT EXISTS `$persistent_settings_table_name` (
+    ///   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    ///   `settings` text,
+    ///   PRIMARY KEY  (`id`)
+    ///   );";
+    /// $wpdb->query ($query);
 
-  /// $query = "CREATE TABLE IF NOT EXISTS `$electrum_wallets_table_name` (
-  ///   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  ///   `master_public_key` varchar(255) NOT NULL,
-  ///   PRIMARY KEY  (`id`),
-  ///   UNIQUE KEY  `master_public_key` (`master_public_key`)
-  ///   );";
-  /// $wpdb->query ($query);
+    /// $query = "CREATE TABLE IF NOT EXISTS `$electrum_wallets_table_name` (
+    ///   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    ///   `master_public_key` varchar(255) NOT NULL,
+    ///   PRIMARY KEY  (`id`),
+    ///   UNIQUE KEY  `master_public_key` (`master_public_key`)
+    ///   );";
+    /// $wpdb->query ($query);
 
-  $query = "CREATE TABLE IF NOT EXISTS `$btc_addresses_table_name` (
+    $query = "CREATE TABLE IF NOT EXISTS `$btc_addresses_table_name` (
     `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
     `btc_address` char(36) NOT NULL,
     `origin_id` char(128) NOT NULL DEFAULT '',
@@ -374,76 +381,63 @@ function BWWC__create_database_tables ($bwwc_settings)
     KEY `origin_id` (`origin_id`),
     KEY `status` (`status`)
     );";
-  $wpdb->query ($query);
-  //----------------------------------------------------------
+    $wpdb->query($query);
+    //----------------------------------------------------------
 
-	// upgrade bwwc_btc_addresses table, add additional indexes
-  if (!$b_first_time)
-  {
-    $version = floatval($bwwc_settings['database_schema_version']);
+    // upgrade bwwc_btc_addresses table, add additional indexes
+    if (!$b_first_time) {
+        $version = floatval($bwwc_settings['database_schema_version']);
 
-    if ($version < 1.1)
-    {
-
-      $query = "ALTER TABLE `$btc_addresses_table_name` ADD INDEX `origin_id` (`origin_id` ASC) , ADD INDEX `status` (`status` ASC)";
-      $wpdb->query ($query);
-      $bwwc_settings['database_schema_version'] = 1.1;
-      $must_update_settings = true;
-    }
-
-    if ($version < 1.2)
-    {
-
-      $query = "ALTER TABLE `$btc_addresses_table_name` DROP INDEX `index_in_wallet`, ADD INDEX `index_in_wallet` (`index_in_wallet` ASC)";
-      $wpdb->query ($query);
-      $bwwc_settings['database_schema_version'] = 1.2;
-      $must_update_settings = true;
-    }
-
-    if ($version < 1.3)
-    {
-
-      $query = "ALTER TABLE `$btc_addresses_table_name` CHANGE COLUMN `origin_id` `origin_id` char(128)";
-      $wpdb->query ($query);
-      $bwwc_settings['database_schema_version'] = 1.3;
-      $must_update_settings = true;
-
-      $mpk = @$bwwc_settings['gateway_settings']['electrum_master_public_key'];
-      if ($mpk)
-      {
-        // Replace hashed values of MPK in DB with real MPK values.
-        $mpk_old_value = 'electrum.mpk.' . md5($mpk);
-        // UPDATE table_name SET field = REPLACE(field, 'foo', 'bar') WHERE INSTR(field, 'foo') > 0;
-        // UPDATE [table_name] SET [field_name] = REPLACE([field_name], "foo", "bar");
-        $query = "UPDATE `$btc_addresses_table_name` SET `origin_id` = '$mpk' WHERE `origin_id` = '$mpk_old_value'";
-        $wpdb->query ($query);
-
-        // Copy settings from old location to new, if new is empty.
-        if (!@$bwwc_settings['electrum_mpk_saved'])
-        {
-          $bwwc_settings['electrum_mpk_saved'] = $mpk;
-          // 'BWWC__update_settings()' will populate $bwwc_settings['electrum_mpks'].
+        if ($version < 1.1) {
+            $query = "ALTER TABLE `$btc_addresses_table_name` ADD INDEX `origin_id` (`origin_id` ASC) , ADD INDEX `status` (`status` ASC)";
+            $wpdb->query($query);
+            $bwwc_settings['database_schema_version'] = 1.1;
+            $must_update_settings = true;
         }
-      }
+
+        if ($version < 1.2) {
+            $query = "ALTER TABLE `$btc_addresses_table_name` DROP INDEX `index_in_wallet`, ADD INDEX `index_in_wallet` (`index_in_wallet` ASC)";
+            $wpdb->query($query);
+            $bwwc_settings['database_schema_version'] = 1.2;
+            $must_update_settings = true;
+        }
+
+        if ($version < 1.3) {
+            $query = "ALTER TABLE `$btc_addresses_table_name` CHANGE COLUMN `origin_id` `origin_id` char(128)";
+            $wpdb->query($query);
+            $bwwc_settings['database_schema_version'] = 1.3;
+            $must_update_settings = true;
+
+            $mpk = @$bwwc_settings['gateway_settings']['electrum_master_public_key'];
+            if ($mpk) {
+                // Replace hashed values of MPK in DB with real MPK values.
+                $mpk_old_value = 'electrum.mpk.' . md5($mpk);
+                // UPDATE table_name SET field = REPLACE(field, 'foo', 'bar') WHERE INSTR(field, 'foo') > 0;
+                // UPDATE [table_name] SET [field_name] = REPLACE([field_name], "foo", "bar");
+                $query = "UPDATE `$btc_addresses_table_name` SET `origin_id` = '$mpk' WHERE `origin_id` = '$mpk_old_value'";
+                $wpdb->query($query);
+
+                // Copy settings from old location to new, if new is empty.
+                if (!@$bwwc_settings['electrum_mpk_saved']) {
+                    $bwwc_settings['electrum_mpk_saved'] = $mpk;
+                    // 'BWWC__update_settings()' will populate $bwwc_settings['electrum_mpks'].
+                }
+            }
+        }
+
+        if ($version < 1.4) {
+            $query = "ALTER TABLE `$btc_addresses_table_name` MODIFY `address_meta` MEDIUMBLOB";
+            $wpdb->query($query);
+            $bwwc_settings['database_schema_version'] = 1.4;
+            $must_update_settings = true;
+        }
     }
 
-    if ($version < 1.4)
-    {
-
-      $query = "ALTER TABLE `$btc_addresses_table_name` MODIFY `address_meta` MEDIUMBLOB";
-      $wpdb->query ($query);
-      $bwwc_settings['database_schema_version'] = 1.4;
-      $must_update_settings = true;
+    if ($must_update_settings) {
+        BWWC__update_settings($bwwc_settings);
     }
 
-  }
-
-  if ($must_update_settings)
-  {
-	  BWWC__update_settings ($bwwc_settings);
-	}
-
-  //----------------------------------------------------------
+    //----------------------------------------------------------
   // Seed DB tables with initial set of data
   /* PERSISTENT SETTINGS CURRENTLY UNUNSED
   if ($b_first_time || !is_array(BWWC__get_persistent_settings()))
@@ -458,17 +452,16 @@ function BWWC__create_database_tables ($bwwc_settings)
 
 //===========================================================================
 // NOTE: Irreversibly deletes all plugin tables and data
-function BWWC__delete_database_tables ()
+function BWWC__delete_database_tables()
 {
-  global $wpdb;
+    global $wpdb;
 
-  ///$persistent_settings_table_name       = $wpdb->prefix . 'bwwc_persistent_settings';
-  ///$electrum_wallets_table_name          = $wpdb->prefix . 'bwwc_electrum_wallets';
-  $btc_addresses_table_name    = $wpdb->prefix . 'bwwc_btc_addresses';
+    ///$persistent_settings_table_name       = $wpdb->prefix . 'bwwc_persistent_settings';
+    ///$electrum_wallets_table_name          = $wpdb->prefix . 'bwwc_electrum_wallets';
+    $btc_addresses_table_name    = $wpdb->prefix . 'bwwc_btc_addresses';
 
-  ///$wpdb->query("DROP TABLE IF EXISTS `$persistent_settings_table_name`");
-  ///$wpdb->query("DROP TABLE IF EXISTS `$electrum_wallets_table_name`");
-  $wpdb->query("DROP TABLE IF EXISTS `$btc_addresses_table_name`");
+    ///$wpdb->query("DROP TABLE IF EXISTS `$persistent_settings_table_name`");
+    ///$wpdb->query("DROP TABLE IF EXISTS `$electrum_wallets_table_name`");
+    $wpdb->query("DROP TABLE IF EXISTS `$btc_addresses_table_name`");
 }
 //===========================================================================
-
