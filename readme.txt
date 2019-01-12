@@ -12,7 +12,7 @@ Bitcoin SV Payments for WooCommerce is a Wordpress plugin that allows you to acc
 
 == Description ==
 
-Your online store must use WooCommerce platform (free wordpress plugin).
+Your online store must use WooCommerce platform (free wordpress p/lugin).
 Once you installed and activated WooCommerce, you may install and activate Bitcoin SV Payments for WooCommerce.
 
 This is still in Beta, some bugs may be encountered please open an issue.
@@ -34,7 +34,7 @@ This is still in Beta, some bugs may be encountered please open an issue.
 1. Clone the git repo or download the zip and extract.  Move 'bitcoin-sv-payments-for-woocommerce' dir to /wp-content/plugins/
 2. Install "Bitcoin SV Payments for WooCommerce" plugin just like any other Wordpress plugin.
 3. Activate.
-4. Configure plugin with your local ElectrumSV xpub address
+4. Configure plugin with your local ElectrumSV master public key
 
 
 == Screenshots ==
