@@ -129,27 +129,26 @@ function BWWC__render_general_settings_page_html()
             <select name="service_provider" class="select ">
               <option <?php if ($bwwc_settings['service_provider'] == 'electrum_wallet') {
         echo 'selected="selected"';
-    } ?> value="electrum_wallet">Your own Electron Cash wallet</option>
+    } ?> value="electrum_wallet">Your own ElectrumSV wallet</option>
               <option disabled <?php if ($bwwc_settings['service_provider'] == 'blockchain_info') {
         echo 'selected="selected"';
     } ?> value="blockchain_info">Blockchain.info API (Disabled for Bitcoin SV)</option>
             </select>
             <p class="description">
-              Required setting: <b>Your own Electron Cash wallet</b>.
+              Required setting: <b>Your own ElectrumSV wallet</b>.
             </p>
           </td>
         </tr>
 
         <tr valign="top">
-          <th scope="row">Electron Cash Master Public Key (MPK):</th>
+          <th scope="row">ElectrumSV Master Public Key (MPK):</th>
           <td>
             <textarea style="width:75%;" name="electrum_mpk_saved"><?php echo $bwwc_settings['electrum_mpk_saved']; ?></textarea>
             <p class="description">
               <ol class="description">
                 <li>
-                  Launch Electron Cash wallet v3.3.2. Connect to a Bitcoin SV node, and get Master Public Key value from:
-                  Wallet -> Master Public Key, or:
-                  <br />older version of Electron Cash: Preferences -> Import/Export -> Master Public Key -> Show.
+                  Launch ElectrumSV and get Master Public Key value from:
+                  Wallet -> Master Public Key
                 </li>
                 <li>
                   Copy long number string and paste it in this field.
@@ -159,7 +158,7 @@ function BWWC__render_general_settings_page_html()
                   <br />Click on "Console" tab and run this command: <tt>wallet.storage.put('gap_limit',100)</tt>
                 </li>
                 <li>
-                  Restart Electron Cash wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
+                  Restart ElectrumSV wallet to activate new gap limit. You may do it later at any time - gap limit does not affect functionlity of your online store.
                   <br />If your online store receives lots of orders in Bitcoin SV - you might need to set gap limit to even bigger value.
                 </li>
               </ol>
@@ -226,11 +225,11 @@ function BWWC__render_general_settings_page_html()
               </select>
 
               <p class="description">
-                <b>No</b> (default, recommended) - will allow to recycle Bitcoin SV addresses that been generated for each placed order but never received any payments. The drawback of this approach is that potential snoop can generate many fake (never paid for) orders to discover sequence of Bitcoin SV addresses that belongs to the wallet of this store and then track down sales through blockchain analysis. The advantage of this option is that it very efficiently reuses empty (zero-balance) Bitcoin SV addresses within the wallet, allowing only 1 sale per address without growing the wallet size (Electron Cash "gap" value).
+                <b>No</b> (default, recommended) - will allow to recycle Bitcoin SV addresses that been generated for each placed order but never received any payments. The drawback of this approach is that potential snoop can generate many fake (never paid for) orders to discover sequence of Bitcoin SV addresses that belongs to the wallet of this store and then track down sales through blockchain analysis. The advantage of this option is that it very efficiently reuses empty (zero-balance) Bitcoin SV addresses within the wallet, allowing only 1 sale per address without growing the wallet size (ElectrumSV "gap" value).
                 <br />
-                <b>Yes</b> - This will guarantee to generate unique Bitcoin SV address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the Electron Cash wallet much sooner).
+                <b>Yes</b> - This will guarantee to generate unique Bitcoin SV address for every order (real, accidental or fake). This option will provide the most anonymity and privacy to the store owner's wallet. The drawback is that it will likely leave a number of addresses within the wallet never used (and hence will require setting very high 'gap limit' within the ElectrumSV wallet much sooner).
                 <br />It is recommended to regenerate new wallet after number of used Bitcoin SV addresses reaches 1000. Wallets with very high gap limits (>1000) are very slow to sync with blockchain and they put an extra load on the network. <br />
-                Extreme privacy mode offers the best anonymity and privacy to the store albeit with the drawbacks of potentially flooding your Electron Cash wallet with expired and zero-balance addresses. Hence, for vast majority of cases (where you just need a secure way to operate Bitcoin SV based store) it is suggested to set this option to 'No').<br />
+                Extreme privacy mode offers the best anonymity and privacy to the store albeit with the drawbacks of potentially flooding your ElectrumSV wallet with expired and zero-balance addresses. Hence, for vast majority of cases (where you just need a secure way to operate Bitcoin SV based store) it is suggested to set this option to 'No').<br />
               </p>
             </td>
         </tr>

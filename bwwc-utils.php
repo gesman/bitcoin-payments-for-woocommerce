@@ -324,7 +324,7 @@ function BWWC__generate_new_bitcoin_address_for_electrum_wallet($bwwc_settings=f
             // Bitcoin SV gateway settings either were not saved
             $ret_info_array = array(
         'result'                      => 'error',
-        'message'                     => 'No MPK passed and either no MPK present in copy-settings or service provider is not Electron Cash',
+        'message'                     => 'No MPK passed and either no MPK present in copy-settings or service provider is not ElectrumSV',
         'host_reply_raw'              => '',
         'generated_bitcoin_address'   => false,
         );
@@ -1090,13 +1090,13 @@ function BWWC__is_gateway_valid_for_use(&$ret_reason_message=null)
     if ($bwwc_settings['service_provider']=='electrum_wallet') {
         $mpk = BWWC__get_next_available_mpk();
         if (!$mpk) {
-            $reason_message = __("Please specify Electron Cash  Master Public Key (MPK). <br />To retrieve MPK: launch your electron cash wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
+            $reason_message = __("Please specify ElectrumSV  Master Public Key (MPK). <br />To retrieve MPK: launch your ElectrumSV wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show)", 'woocommerce');
             $valid = false;
         } elseif (!preg_match('/^[a-f0-9]{128}$/', $mpk) && !preg_match('/^xpub[a-zA-Z0-9]{107}$/', $mpk)) {
-            $reason_message = __("Electron Cash  Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
+            $reason_message = __("ElectrumSV Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');
             $valid = false;
         } elseif (!extension_loaded('gmp') && !extension_loaded('bcmath')) {
-            $reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For Electron Cash wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)!", 'woocommerce');
+            $reason_message = __("ERROR: neither 'bcmath' nor 'gmp' math extensions are loaded For ElectrumSV wallet options to function. Contact your hosting company and ask them to enable either 'bcmath' or 'gmp' extensions. 'gmp' is preferred (much faster)!", 'woocommerce');
             $valid = false;
         }
     }

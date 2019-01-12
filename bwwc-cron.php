@@ -214,14 +214,14 @@ function BWWC_cron_job_worker($hardcron=false)
     // ...
 
     //-----------------------------------------------------
-    // Pre-generate new Bitcoin SV address for electron cash wallet
+    // Pre-generate new Bitcoin SV address for ElectrumSV wallet
 
     // Try to retrieve mpk from copy of settings.
     if ($hardcron) {
         $electrum_mpk = BWWC__get_next_available_mpk();
 
         if ($electrum_mpk && @$bwwc_settings['service_provider'] == 'electrum_wallet') {
-            // Calculate number of unused addresses belonging to currently active electron cash wallet
+            // Calculate number of unused addresses belonging to currently active ElectrumSV wallet
 
             $origin_id = $electrum_mpk;
 
