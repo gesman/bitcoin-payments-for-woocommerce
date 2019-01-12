@@ -34,11 +34,8 @@ This is still in Beta, some bugs may be encountered please open an issue.
 1. Clone the git repo or download the zip and extract.  Move 'bitcoin-sv-payments-for-woocommerce' dir to /wp-content/plugins/
 2. Install "Bitcoin SV Payments for WooCommerce" plugin just like any other Wordpress plugin.
 3. Activate.
-<<<<<<< Updated upstream
-4. Configure plugin with your local ElectrumSV master public key
-=======
-4. Configure plugin with your local ElectrumSV (electrumsv.io) xpub address
->>>>>>> Stashed changes
+4. Configure plugin with your local ElectrumSV (electrumsv.io) master public key
+
 
 
 == Screenshots ==
