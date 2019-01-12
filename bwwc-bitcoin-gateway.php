@@ -121,7 +121,7 @@ function BWWC__plugins_loaded__load_bitcoin_gateway()
             } elseif ($this->service_provider=='electrum_wallet') {
                 $mpk = BWWC__get_next_available_mpk();
                 if (!$mpk) {
-                    $reason_message = __("Please specify ElectrumSV Master Public Key (MPK) in Bitcoinway plugin settings. <br />To retrieve MPK: launch your ElectrumSV wallet, select: Wallet->Master Public Keys, OR: <br />Preferences->Import/Export->Master Public Key->Show", 'woocommerce');
+                    $reason_message = __("Please specify ElectrumSV Master Public Key (MPK) in Bitcoin SV plugin settings. <br />To retrieve MPK: launch your ElectrumSV wallet, select: Wallet->Information", 'woocommerce');
                     $valid = false;
                 } elseif (!preg_match('/^[a-f0-9]{128}$/', $mpk) && !preg_match('/^xpub[a-zA-Z0-9]{107}$/', $mpk)) {
                     $reason_message = __("ElectrumSV Master Public Key is invalid. Must be 128 or 111 characters long, consisting of digits and letters.", 'woocommerce');

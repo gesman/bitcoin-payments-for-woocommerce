@@ -148,7 +148,7 @@ function BWWC__render_general_settings_page_html()
               <ol class="description">
                 <li>
                   Launch ElectrumSV and get Master Public Key value from:
-                  Wallet -> Master Public Key
+                  Wallet -> Information
                 </li>
                 <li>
                   Copy long number string and paste it in this field.
