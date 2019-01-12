@@ -19,8 +19,8 @@ This is still in Beta, some bugs may be encountered please open an issue.
 
 = Benefits =
 
-* Accept payment directly into your personal Electron Cash wallet.
-* Electron Cash wallet payment option completely removes dependency on any third party service and middlemen.
+* Accept payment directly into your personal ElectrumSV wallet.
+* ElectrumSV wallet payment option completely removes dependency on any third party service and middlemen.
 * Accept payment in Bitcoin SV for physical and digital downloadable products.
 * Add Bitcoin SV  payments option to your existing online store with alternative main currency.
 * Flexible exchange rate calculations fully managed via administrative settings.
@@ -34,6 +34,7 @@ This is still in Beta, some bugs may be encountered please open an issue.
 1. Clone the git repo or download the zip and extract.  Move 'bitcoin-sv-payments-for-woocommerce' dir to /wp-content/plugins/
 2. Install "Bitcoin SV Payments for WooCommerce" plugin just like any other Wordpress plugin.
 3. Activate.
+4. Configure plugin with your local ElectrumSV xpub address
 
 
 == Screenshots ==
@@ -66,7 +67,7 @@ This is still in Beta, some bugs may be encountered please open an issue.
 == Changelog ==
 
 = 4.20 =
-* Bitcoin SV support. Use Weighted Average exchange rate calculation. Electron Cash version 3.3.2 is last compatible version with BSV.
+* Bitcoin SV support. Use Weighted Average exchange rate calculation. ElectrumSV wallet is compatible with this plugin. Previous wallet, Electron Cash version 3.3.2 is last compatible version with BSV.
 
 = 4.19 =
 * Rebase from sanchaz's fork, minus cashaddr
