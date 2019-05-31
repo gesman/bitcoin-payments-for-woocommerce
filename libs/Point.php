@@ -33,7 +33,7 @@ OTHER DEALINGS IN THE SOFTWARE.
  * The rest of the methods are there for supporting the ones above.
  */
 
-class Point implements PointInterface
+class Point
 {
     public $curve;
     public $x;
@@ -47,19 +47,6 @@ class Point implements PointInterface
         $this->x = $x;
         $this->y = $y;
         $this->order = $order;
-
-
-        if (isset($this->curve) && ($this->curve instanceof CurveFp)) {
-            if (!$this->curve->contains($this->x, $this->y)) {
-                throw new ErrorException("Curve" . print_r($this->curve, true) . " does not contain point ( " . $x . " , " . $y . " )");
-            }
-
-            if ($this->order != null) {
-                if (self::cmp(self::mul($order, $this), self::$infinity) != 0) {
-                    throw new ErrorException("SELF * ORDER MUST EQUAL INFINITY.");
-                }
-            }
-        }
     }
 
     public static function cmp($p1, $p2)
