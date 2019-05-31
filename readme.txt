@@ -1,3 +1,7 @@
+2019-05-31  Note this fork is not currently maintained, please check sanchaz's updated fork here:
+https://github.com/sanchaz/P2P-Electronic-Cash-Payments-for-WooCommerce
+
+
 === (BETA) Bitcoin SV Payments for WooCommerce ===
 Contributors: mboyd1, sanchaz, gesman, bitcoinway.com
 Tags: bitcoin sv, bitcoin sv wordpress plugin, bitcoin sv plugin, bitcoin sv payments, accept bitcoin sv, bsv, bchsv
