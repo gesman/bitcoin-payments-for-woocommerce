@@ -1,5 +1,5 @@
-2019-05-31  Note this fork is not currently maintained, please check sanchaz's updated fork here:
-https://github.com/sanchaz/P2P-Electronic-Cash-Payments-for-WooCommerce
+2021-07-12  *Note this fork is not currently maintained, please check Anypay Inc's updated plugin here:
+https://github.com/anypay/WooCommerce
 
 
 === (BETA) Bitcoin SV Payments for WooCommerce ===
