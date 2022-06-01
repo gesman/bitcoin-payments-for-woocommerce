@@ -1,6 +1,5 @@
 2021-07-12  *Note this fork is not currently maintained, please check Anypay Inc's updated plugin here:
-https://github.com/anypay/WooCommerce
-
+https://github.com/anypay/anypay-woocommerce
 
 === (BETA) Bitcoin SV Payments for WooCommerce ===
 Contributors: mboyd1, sanchaz, gesman, bitcoinway.com
