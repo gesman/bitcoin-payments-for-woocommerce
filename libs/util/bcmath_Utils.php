@@ -33,20 +33,6 @@ if (!defined('MAX_BASE')) {
 
 class bcmath_Utils
 {
-    public static function bcrand($min, $max=false)
-    {
-        if (extension_loaded('bcmath') && USE_EXT=='BCMATH') {
-            if (!$max) {
-                $max = $min;
-                $min = 0;
-            }
-
-            return bcadd(bcmul(bcdiv(mt_rand(0, mt_getrandmax()), mt_getrandmax(), strlen($max)), bcsub(bcadd($max, 1), $min)), $min);
-        } else {
-            throw new ErrorException("Please install BCMATH");
-        }
-    }
-
     public static function bchexdec($hex)
     {
         if (extension_loaded('bcmath') && USE_EXT=='BCMATH') {
@@ -77,7 +63,7 @@ class bcmath_Utils
                 return strrev($hex);
             }
 
-            for ($i = 0; $isset($hex[$i]); $i++) {
+            for ($i = 0; isset($hex[$i]); $i++) {
                 $hex[$i] = dechex(15 - hexdec($hex[$i]));
             }
             for ($i = 0; isset($hex[$i]) && $hex[$i] == 'f'; $i++) {
@@ -92,13 +78,58 @@ class bcmath_Utils
         }
     }
 
+
+    /**
+     *  Optimized version - 4 times faster than original one
+     */
     public static function bcand($x, $y)
     {
-        if (extension_loaded('bcmath') && USE_EXT=='BCMATH') {
-            return self::_bcbitwise_internal($x, $y, 'bcmath_Utils::_bcand');
-        } else {
-            throw new ErrorException("Please install BCMATH");
+        $min = $x;
+        $max = $y;
+
+        if (bccomp($min, $max) > 0) {
+            $temp = $min;
+            $min = $max;
+            $max = $temp;
         }
+
+        $min = self::dec2base($min, 256);
+        $max = self::dec2base($max, 256);
+
+        $buffer = array();
+        for ($i = 0; $i < strlen($min); ++$i) {
+            $buffer[] = substr($min, -$i - 1, 1) & substr($max, -$i - 1, 1);
+        }
+
+        $buffer = array_reverse($buffer);
+        $result = implode($buffer);
+
+        return self::base2dec($result, 256);
+    }
+
+    private static function _bitwise(&$left, &$right, $bits = null)
+    {
+        if ($bits === null) {
+            $bits = max(self::bits_needed($left), self::bits_needed($right));
+        }
+        $left  = self::dec2base($left, 2);
+        $right = self::dec2base($right, 2);
+        $len   = max(strlen($left), strlen($right), (int)$bits);
+        $left  = sprintf("%0{$len}s", $left);
+        $right = sprintf("%0{$len}s", $right);
+
+        return $len;
+    }
+
+    public static function bits_needed($num, $boundary = 4)
+    {
+        $bits = 0;
+        while ($num > 0) {
+            $num = bcdiv($num, '2', 0);
+            $bits++;
+        }
+        // round to nearest boundrary
+        return $boundary ? ceil($bits / $boundary) * $boundary : $bits;
     }
 
     // Bitwise OR
@@ -257,18 +288,35 @@ class bcmath_Utils
         }
     }
 
+    /**
+     * Optimized for loop calls
+     */
     public static function digits($base)
     {
+        static $cache;
+
+        if ($base == 256 && $cache) {
+            return $cache;
+        }
+
         if ($base > 64) {
             $digits = "";
             for ($loop = 0; $loop < 256; $loop++) {
-                $digits.=chr($loop);
+                $digits .= chr($loop);
             }
         } else {
             $digits = "0123456789abcdefghijklmnopqrstuvwxyz";
             $digits.="ABCDEFGHIJKLMNOPQRSTUVWXYZ-_";
         }
         $digits = substr($digits, 0, $base);
+
+        if ($base == 256) {
+            if (!$cache) {
+                $cache = (string) $digits;
+            }
+            return $cache;
+        }
+
         return (string) $digits;
     }
 
